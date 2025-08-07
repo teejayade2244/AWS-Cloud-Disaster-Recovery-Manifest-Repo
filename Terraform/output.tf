@@ -71,3 +71,13 @@ output "secondary_eks_kubeconfig_command" {
   description = "Command to update kubeconfig for secondary EKS cluster."
   value       = "aws eks update-kubeconfig --region ${var.secondary_region} --name ${module.secondary_eks.cluster_name}"
 }
+
+output "alb_ingress_controller_role_arn" {
+  description = "ARN of the IAM role for the ALB Ingress Controller Service Account."
+  value       = aws_iam_role.alb_ingress_controller_role.arn
+}
+
+output "cluster_certificate_authority_data" {
+  description = "The base64 encoded certificate authority data for the EKS cluster."
+  value       = aws_eks_cluster.main.certificate_authority[0].data
+}

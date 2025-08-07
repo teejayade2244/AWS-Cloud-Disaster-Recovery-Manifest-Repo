@@ -191,13 +191,70 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_controller_policy_attach"
   role       = aws_iam_role.alb_ingress_controller_role.name
 }
 
-# Data source for current AWS account ID
-data "aws_caller_identity" "current" {
+
+# Primary EKS Cluster Data
+data "aws_eks_cluster" "primary" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
 }
 
-# Deploy the AWS Load Balancer Controller using Helm
-resource "helm_release" "aws_load_balancer_controller" {
-  provider = helm
+# Primary EKS Cluster Auth Data
+data "aws_eks_cluster_auth" "primary" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
+}
+
+# Secondary EKS Cluster Data
+data "aws_eks_cluster" "secondary" {
+  provider = aws.secondary
+  name     = module.secondary_eks.cluster_name
+}
+
+# Secondary EKS Cluster Auth Data
+data "aws_eks_cluster_auth" "secondary" {
+  provider = aws.secondary
+  name     = module.secondary_eks.cluster_name
+}
+
+# --- Dynamic Kubernetes Provider Configuration for Primary EKS ---
+provider "kubernetes" {
+  alias = "primary"
+  host                   = data.aws_eks_cluster.primary.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.primary.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.primary.token
+}
+
+# --- Dynamic Kubernetes Provider Configuration for Secondary EKS ---
+provider "kubernetes" {
+  alias = "secondary"
+  host                   = data.aws_eks_cluster.secondary.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.secondary.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.secondary.token
+}
+
+# --- Dynamic Helm Provider Configuration for Primary EKS ---
+provider "helm" {
+  alias = "primary"
+  kubernetes {
+    host                   = data.aws_eks_cluster.primary.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.primary.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.primary.token
+  }
+}
+
+# --- Dynamic Helm Provider Configuration for Secondary EKS ---
+provider "helm" {
+  alias = "secondary"
+  kubernetes {
+    host                   = data.aws_eks_cluster.secondary.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.secondary.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.secondary.token
+  }
+}
+
+# --- Deploy ALB Ingress Controller using Helm for Primary EKS ---
+resource "helm_release" "primary_aws_load_balancer_controller" {
+  provider = helm.primary
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
@@ -206,7 +263,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "clusterName"
-    value = aws_eks_cluster.main.name
+    value = module.primary_eks.cluster_name
   }
 
   set {
@@ -221,12 +278,47 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = aws_iam_role.alb_ingress_controller_role.arn
+    value = module.primary_eks.alb_ingress_controller_role_arn # This output will be added to EKS module
   }
 
   # Ensure the Helm chart is deployed after the EKS cluster and IAM role
   depends_on = [
-    aws_eks_cluster.main,
-    aws_iam_role_policy_attachment.alb_ingress_controller_policy_attach,
+    module.primary_eks,
+    # Ensure the required IAM policy for ALB Controller is attached
+    # This dependency will be handled by the EKS module's outputs
+  ]
+}
+
+# --- Deploy ALB Ingress Controller using Helm for Secondary EKS ---
+resource "helm_release" "secondary_aws_load_balancer_controller" {
+  provider = helm.secondary
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  version    = "1.7.0" # Use a compatible version for your K8s version
+
+  set {
+    name  = "clusterName"
+    value = module.secondary_eks.cluster_name
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = "aws-load-balancer-controller"
+  }
+
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.secondary_eks.alb_ingress_controller_role_arn # This output will be added to EKS module
+  }
+
+  depends_on = [
+    module.secondary_eks,
   ]
 }
