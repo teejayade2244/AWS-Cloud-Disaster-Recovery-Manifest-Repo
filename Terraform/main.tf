@@ -22,3 +22,56 @@ module "secondary_networking" {
     aws = aws.secondary
   }
 }
+
+# Call the EKS module for the primary region
+module "primary_eks" {
+  source = "./modules/aws-region-base/eks" # Path to your EKS module
+
+  # Pass variables to the module
+  region                = var.primary_region
+  environment_tag       = "Production"
+  vpc_id                = module.primary_networking.vpc_id
+  private_subnet_ids    = module.primary_networking.private_subnet_ids
+  public_subnet_ids     = module.primary_networking.public_subnet_ids
+  cluster_name          = "${var.cluster_name_prefix}-${var.primary_region}"
+  kubernetes_version    = var.kubernetes_version
+  node_instance_type    = var.node_instance_type
+  node_group_desired_size = var.node_group_desired_size # Can be overridden in dev.tfvars
+  node_group_max_size   = var.node_group_max_size
+  node_group_min_size   = var.node_group_min_size
+
+  # Explicitly pass the primary providers to the module
+  providers = {
+    aws        = aws.primary
+    kubernetes = kubernetes.primary # This needs to be defined in a separate provider block
+    helm       = helm.primary       # This needs to be defined in a separate provider block
+    tls        = tls.primary
+  }
+}
+
+# Call the EKS module for the secondary region
+module "secondary_eks" {
+  source = "./modules/aws-region-base/eks" # Path to your EKS module
+
+  # Pass variables to the module
+  region                = var.secondary_region
+  environment_tag       = "DisasterRecovery"
+  vpc_id                = module.secondary_networking.vpc_id
+  private_subnet_ids    = module.secondary_networking.private_subnet_ids
+  public_subnet_ids     = module.secondary_networking.public_subnet_ids
+  cluster_name          = "${var.cluster_name_prefix}-${var.secondary_region}"
+  kubernetes_version    = var.kubernetes_version
+  node_instance_type    = var.node_instance_type
+  # For warm standby, secondary region desired size might be lower
+  node_group_desired_size = 0 # Scale to 0 for cost savings in standby
+  node_group_max_size   = var.node_group_max_size
+  node_group_min_size   = 0 # Allow scaling down to 0
+
+  # Explicitly pass the secondary providers to the module
+  providers = {
+    aws        = aws.secondary
+    kubernetes = kubernetes.secondary # This needs to be defined in a separate provider block
+    helm       = helm.secondary       # This needs to be defined in a separate provider block
+    tls        = tls.secondary
+  }
+}

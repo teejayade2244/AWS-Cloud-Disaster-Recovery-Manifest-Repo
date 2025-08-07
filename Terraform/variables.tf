@@ -44,41 +44,41 @@ variable "secondary_private_subnet_cidrs" {
 }
 
 # # --- EKS Cluster Variables (will be used in compute module) ---
-# variable "cluster_name_prefix" {
-#   description = "Prefix for the EKS cluster names (e.g., 'aura-flow')."
-#   type        = string
-#   default     = "aura-flow"
-# }
+variable "cluster_name_prefix" {
+  description = "Prefix for the EKS cluster names (e.g., 'aura-flow')."
+  type        = string
+  default     = "aura-flow"
+}
 
-# variable "kubernetes_version" {
-#   description = "Kubernetes version for the EKS clusters."
-#   type        = string
-#   default     = "1.28" # Or your preferred version
-# }
+variable "kubernetes_version" {
+  description = "Kubernetes version for the EKS clusters."
+  type        = string
+  default     = "1.28" # Or your preferred version
+}
 
-# variable "node_instance_type" {
-#   description = "EC2 instance type for EKS worker nodes."
-#   type        = string
-#   default     = "t3.medium" # Adjust based on your needs
-# }
+variable "node_instance_type" {
+  description = "EC2 instance type for EKS worker nodes."
+  type        = string
+  default     = "t3.medium" # Adjust based on your needs
+}
 
-# variable "node_group_desired_size" {
-#   description = "Desired number of worker nodes in the EKS node group."
-#   type        = number
-#   default     = 2 # For warm standby, primary might be higher, secondary lower
-# }
+variable "node_group_desired_size" {
+  description = "Desired number of worker nodes in the EKS node group."
+  type        = number
+  default     = 2 # For warm standby, primary might be higher, secondary lower
+}
 
-# variable "node_group_max_size" {
-#   description = "Maximum number of worker nodes in the EKS node group."
-#   type        = number
-#   default     = 3
-# }
+variable "node_group_max_size" {
+  description = "Maximum number of worker nodes in the EKS node group."
+  type        = number
+  default     = 3
+}
 
-# variable "node_group_min_size" {
-#   description = "Minimum number of worker nodes in the EKS node group."
-#   type        = number
-#   default     = 1
-# }
+variable "node_group_min_size" {
+  description = "Minimum number of worker nodes in the EKS node group."
+  type        = number
+  default     = 1
+}
 
 # # --- RDS Database Variables (will be used in rds module) ---
 # variable "db_instance_type" {
