@@ -8,10 +8,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.23" 
     }
-    # helm = {
-    #   source  = "hashicorp/helm"
-    #   version = "2.12.1" # Using v2.x which supports the block syntax
-    # }
+    helm = {
+      source = "hashicorp/helm"
+      version = "2.12.1" 
+    }
   }
 }
 
@@ -47,21 +47,21 @@ provider "kubernetes" {
   token                  = "dummy-token-secondary"
 }
 
-# Correct Helm provider configuration for v2.x
-# provider "helm" {
-#   alias = "primary"
-#   kubernetes {
-#     host                   = "https://dummy-helm-host-primary"
-#     cluster_ca_certificate = "dummy-helm-ca-primary"
-#     token                  = "dummy-helm-token-primary"
-#   }
-# }
+# Updated Helm provider configuration using argument syntax
+provider "helm" {
+  alias = "primary"
+  kubernetes {
+    host                   = "https://dummy-helm-host-primary"
+    cluster_ca_certificate = "dummy-helm-ca-primary"
+    token                  = "dummy-helm-token-primary"
+  }
+}
 
-# provider "helm" {
-#   alias = "secondary"
-#   kubernetes {
-#     host                   = "https://dummy-helm-host-secondary"
-#     cluster_ca_certificate = "dummy-helm-ca-secondary"
-#     token                  = "dummy-helm-token-secondary"
-#   }
-# }
+provider "helm" {
+  alias = "secondary"
+  kubernetes {
+    host                   = "https://dummy-helm-host-secondary"
+    cluster_ca_certificate = "dummy-helm-ca-secondary"
+    token                  = "dummy-helm-token-secondary"
+  }
+}
