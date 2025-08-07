@@ -1,4 +1,5 @@
 # Outputs for the EKS module
+
 output "cluster_name" {
   description = "The name of the EKS cluster."
   value       = aws_eks_cluster.main.name
@@ -27,4 +28,10 @@ output "private_subnet_ids" {
 output "public_subnet_ids" {
   description = "Public subnet IDs used by EKS Load Balancers."
   value       = var.public_subnet_ids
+}
+
+# This is the crucial output that was missing or incorrectly defined
+output "alb_ingress_controller_role_arn" {
+  description = "ARN of the IAM role for the ALB Ingress Controller Service Account."
+  value       = aws_iam_role.alb_ingress_controller_role.arn
 }
