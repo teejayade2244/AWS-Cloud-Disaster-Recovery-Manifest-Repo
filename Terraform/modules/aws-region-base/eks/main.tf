@@ -152,9 +152,9 @@ data "tls_certificate" "eks_oidc_thumbprint" {
 }
 
 # IAM Policy for ALB Ingress Controller
-data "aws_iam_policy" "alb_ingress_controller_policy" {
-  arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/AWSLoadBalancerControllerIAMPolicy"
-}
+# data "aws_iam_policy" "alb_ingress_controller_policy" {
+#   arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/AWSLoadBalancerControllerIAMPolicy"
+# }
 
 # IAM Role for ALB Ingress Controller Service Account
 # resource "aws_iam_role" "alb_ingress_controller_role" {
