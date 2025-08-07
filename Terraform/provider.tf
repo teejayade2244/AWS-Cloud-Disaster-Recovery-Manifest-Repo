@@ -3,7 +3,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0" # Use a compatible version, e.g., latest 5.x
+      version = "~> 5.0" 
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.23" 
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.11" 
     }
   }
 }
@@ -33,7 +41,6 @@ provider "tls" {
     # It needs a dummy config for `terraform init` to pass
     provider "kubernetes" {
       alias = "primary"
-      # Dummy values for init, will be overridden by module output later
       host                   = "https://dummy-host-primary"
       cluster_ca_certificate = "dummy-ca-primary"
       token                  = "dummy-token-primary"
@@ -67,7 +74,7 @@ provider "tls" {
       }
     }
 
-data "aws_eks_cluster_auth" "main" {
-  name     = aws_eks_cluster.main.name
-}
+# data "aws_eks_cluster_auth" "main" {
+#   name     = aws_eks_cluster.main.name
+# }
 

@@ -43,8 +43,8 @@ module "primary_eks" {
   # Explicitly pass the primary providers to the module
   providers = {
     aws        = aws.primary
-    kubernetes = kubernetes.primary # This needs to be defined in a separate provider block
-    helm       = helm.primary       # This needs to be defined in a separate provider block
+    kubernetes = kubernetes.primary 
+    helm       = helm.primary      
     tls        = tls.primary
   }
 }
@@ -70,8 +70,8 @@ module "secondary_eks" {
   # Explicitly pass the secondary providers to the module
   providers = {
     aws        = aws.secondary
-    kubernetes = kubernetes.secondary # This needs to be defined in a separate provider block
-    helm       = helm.secondary       # This needs to be defined in a separate provider block
+    kubernetes = kubernetes.secondary 
+    helm       = helm.secondary      
     tls        = tls.secondary
   }
 }
