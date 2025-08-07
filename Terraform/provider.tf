@@ -33,35 +33,62 @@ provider "tls" {
   alias = "secondary"
 }
 
-provider "kubernetes" {
-  alias                  = "primary"
-  host                   = "https://dummy-host-primary"
-  cluster_ca_certificate = "dummy-ca-primary"
-  token                  = "dummy-token-primary"
+# Primary EKS Cluster Data
+data "aws_eks_cluster" "primary" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
 }
 
-provider "kubernetes" {
-  alias                  = "secondary"
-  host                   = "https://dummy-host-secondary"
-  cluster_ca_certificate = "dummy-ca-secondary"
-  token                  = "dummy-token-secondary"
+# Primary EKS Cluster Auth Data
+data "aws_eks_cluster_auth" "primary" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
 }
 
-# Updated Helm provider configuration using argument syntax
+# Secondary EKS Cluster Data
+data "aws_eks_cluster" "secondary" {
+  provider = aws.secondary
+  name     = module.secondary_eks.cluster_name
+}
+
+# Secondary EKS Cluster Auth Data
+data "aws_eks_cluster_auth" "secondary" {
+  provider = aws.secondary
+  name     = module.secondary_eks.cluster_name
+}
+
+# --- Dynamic Kubernetes Provider Configuration for Primary EKS ---
+provider "kubernetes" {
+  alias = "primary"
+  host                   = data.aws_eks_cluster.primary.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.primary.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.primary.token
+}
+
+# --- Dynamic Kubernetes Provider Configuration for Secondary EKS ---
+provider "kubernetes" {
+  alias = "secondary"
+  host                   = data.aws_eks_cluster.secondary.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.secondary.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.secondary.token
+}
+
+# --- Dynamic Helm Provider Configuration for Primary EKS ---
 provider "helm" {
   alias = "primary"
   kubernetes {
-    host                   = "https://dummy-helm-host-primary"
-    cluster_ca_certificate = "dummy-helm-ca-primary"
-    token                  = "dummy-helm-token-primary"
+    host                   = data.aws_eks_cluster.primary.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.primary.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.primary.token
   }
 }
 
+# --- Dynamic Helm Provider Configuration for Secondary EKS ---
 provider "helm" {
   alias = "secondary"
   kubernetes {
-    host                   = "https://dummy-helm-host-secondary"
-    cluster_ca_certificate = "dummy-helm-ca-secondary"
-    token                  = "dummy-helm-token-secondary"
+    host                   = data.aws_eks_cluster.secondary.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.secondary.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.secondary.token
   }
 }
