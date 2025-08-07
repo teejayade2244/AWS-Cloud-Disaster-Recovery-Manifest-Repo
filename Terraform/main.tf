@@ -44,7 +44,7 @@ module "primary_eks" {
   providers = {
     aws        = aws.primary
     kubernetes = kubernetes.primary 
-    helm       = helm.primary      
+    # helm       = helm.primary      
     tls        = tls.primary
   }
 }
@@ -71,7 +71,7 @@ module "secondary_eks" {
   providers = {
     aws        = aws.secondary
     kubernetes = kubernetes.secondary 
-    helm       = helm.secondary      
+    # helm       = helm.secondary      
     tls        = tls.secondary
   }
 }
