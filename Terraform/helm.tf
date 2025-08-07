@@ -24,14 +24,14 @@ resource "helm_release" "primary_aws_load_balancer_controller" {
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.primary_eks.alb_ingress_controller_role_arn
+    value = module.primary_eks.alb_ingress_controller_role_arn # Correctly references module output
   }
 
-  # Ensure the Helm chart is deployed after the EKS cluster and IAM role
+  # The helm_release implicitly depends on the helm.primary provider being configured.
+  # The helm.primary provider itself depends on the EKS data sources, which depend on module.primary_eks.
+  # Therefore, a direct depends_on on the module is sufficient.
   depends_on = [
     module.primary_eks,
-    # The Kubernetes provider configuration must be complete before Helm can use it
-    kubernetes.primary,
   ]
 }
 
@@ -61,12 +61,10 @@ resource "helm_release" "secondary_aws_load_balancer_controller" {
 
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.secondary_eks.alb_ingress_controller_role_arn
+    value = module.secondary_eks.alb_ingress_controller_role_arn # Correctly references module output
   }
 
   depends_on = [
     module.secondary_eks,
-    # The Kubernetes provider configuration must be complete before Helm can use it
-    kubernetes.secondary,
   ]
 }
