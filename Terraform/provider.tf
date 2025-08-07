@@ -9,8 +9,8 @@ terraform {
       version = "~> 2.23" 
     }
     helm = {
-      source = "hashicorp/helm"
-      version = "2.12.1" 
+      source  = "hashicorp/helm"
+      version = "2.12.1" # Using v2.x which supports the block syntax
     }
   }
 }
@@ -47,7 +47,7 @@ provider "kubernetes" {
   token                  = "dummy-token-secondary"
 }
 
-# Updated Helm provider configuration using argument syntax
+# Correct Helm provider configuration for v2.x
 provider "helm" {
   alias = "primary"
   kubernetes {
