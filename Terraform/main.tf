@@ -1,4 +1,4 @@
-# main.tf
+# main.tf - Infrastructure only
 
 module "primary_networking" {
   source = "./modules/aws-region-base/networking" 
@@ -64,7 +64,7 @@ locals {
   ]
 }
 
-# Create EKS clusters without Kubernetes/Helm providers first
+# Create EKS clusters
 module "primary_eks" {
   source = "./modules/aws-region-base/eks"
 
@@ -117,27 +117,11 @@ module "secondary_eks" {
   ]
 }
 
-# Data sources for EKS clusters (after they're created)
-data "aws_eks_cluster" "primary" {
-  provider = aws.primary
-  name     = module.primary_eks.cluster_name
-  depends_on = [module.primary_eks]
+# Output the cluster names for the Helm deployment
+output "primary_cluster_name" {
+  value = module.primary_eks.cluster_name
 }
 
-data "aws_eks_cluster_auth" "primary" {
-  provider = aws.primary
-  name     = module.primary_eks.cluster_name
-  depends_on = [module.primary_eks]
-}
-
-data "aws_eks_cluster" "secondary" {
-  provider = aws.secondary
-  name     = module.secondary_eks.cluster_name
-  depends_on = [module.secondary_eks]
-}
-
-data "aws_eks_cluster_auth" "secondary" {
-  provider = aws.secondary
-  name     = module.secondary_eks.cluster_name
-  depends_on = [module.secondary_eks]
+output "secondary_cluster_name" {
+  value = module.secondary_eks.cluster_name
 }
