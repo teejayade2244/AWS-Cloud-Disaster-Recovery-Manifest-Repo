@@ -1,11 +1,11 @@
 # --- VPC Peering Connection Module Resources ---
 
+# Explicitly declare required providers for this module
 terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
-      configuration_aliases = [aws.primary, aws.secondary]
     }
   }
 }
@@ -15,7 +15,7 @@ resource "aws_vpc_peering_connection" "main" {
   provider      = aws.primary # Initiated from the primary region's provider
   peer_vpc_id   = var.secondary_vpc_id
   vpc_id        = var.primary_vpc_id
-  peer_region   = var.secondary_region # Specify the peer region
+  # Removed: peer_region = var.secondary_region # <<-- THIS LINE IS REMOVED
   auto_accept   = true # Auto-accept since it's same account
 
   tags = {
