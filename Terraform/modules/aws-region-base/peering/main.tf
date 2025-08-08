@@ -13,23 +13,19 @@ terraform {
 
 # 1. Create VPC Peering Connection (initiated from primary region)
 resource "aws_vpc_peering_connection" "main" {
-  provider      = aws.primary # Initiated from the primary region's provider
+  provider      = aws.primary 
   peer_vpc_id   = var.secondary_vpc_id
   vpc_id        = var.primary_vpc_id
-  # Removed: peer_region = var.secondary_region # <<-- THIS LINE IS REMOVED
-  auto_accept   = true # Auto-accept since it's same account
-
+  auto_accept   = true 
   tags = {
     Name = "aura-flow-primary-to-secondary-peering"
   }
 }
 
 # No aws_vpc_peering_connection_accepter needed if auto_accept = true and same account
-
 # --- Route Table Updates ---
 # We need to add routes to ALL primary and secondary public/private subnets' route tables.
 # Data sources to retrieve the route table IDs from the networking module's outputs.
-
 data "aws_route_table" "primary_public_subnet_route_tables" {
   provider = aws.primary
   count    = length(var.primary_public_subnet_ids)

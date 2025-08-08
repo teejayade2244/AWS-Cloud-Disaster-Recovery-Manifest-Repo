@@ -24,30 +24,30 @@ module "secondary_networking" {
   }
 }
 
-module "vpc_peering" {
-  source = "./modules/aws-region-base/peering"
+# module "vpc_peering" {
+#   source = "./modules/aws-region-base/peering"
 
-  primary_region             = var.primary_region
-  secondary_region           = var.secondary_region
-  primary_vpc_id             = module.primary_networking.vpc_id
-  primary_vpc_cidr           = var.primary_vpc_cidr
-  primary_private_subnet_ids = module.primary_networking.private_subnet_ids
-  primary_public_subnet_ids  = module.primary_networking.public_subnet_ids
-  secondary_vpc_id           = module.secondary_networking.vpc_id
-  secondary_vpc_cidr         = var.secondary_vpc_cidr
-  secondary_private_subnet_ids = module.secondary_networking.private_subnet_ids
-  secondary_public_subnet_ids  = module.secondary_networking.public_subnet_ids
+#   primary_region             = var.primary_region
+#   secondary_region           = var.secondary_region
+#   primary_vpc_id             = module.primary_networking.vpc_id
+#   primary_vpc_cidr           = var.primary_vpc_cidr
+#   primary_private_subnet_ids = module.primary_networking.private_subnet_ids
+#   primary_public_subnet_ids  = module.primary_networking.public_subnet_ids
+#   secondary_vpc_id           = module.secondary_networking.vpc_id
+#   secondary_vpc_cidr         = var.secondary_vpc_cidr
+#   secondary_private_subnet_ids = module.secondary_networking.private_subnet_ids
+#   secondary_public_subnet_ids  = module.secondary_networking.public_subnet_ids
 
-  providers = {
-    aws.primary   = aws.primary
-    aws.secondary = aws.secondary
-  }
+#   providers = {
+#     aws.primary   = aws.primary
+#     aws.secondary = aws.secondary
+#   }
 
-  depends_on = [
-    module.primary_networking,
-    module.secondary_networking
-  ]
-}
+#   depends_on = [
+#     module.primary_networking,
+#     module.secondary_networking
+#   ]
+# }
 
 locals {
   terraform_server_private_ip_cidr = "10.0.2.111/32"
@@ -117,11 +117,3 @@ module "secondary_eks" {
   ]
 }
 
-# Output the cluster names for the Helm deployment
-output "primary_cluster_name" {
-  value = module.primary_eks.cluster_name
-}
-
-output "secondary_cluster_name" {
-  value = module.secondary_eks.cluster_name
-}
