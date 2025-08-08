@@ -1,3 +1,5 @@
+# main.tf
+
 module "primary_networking" {
   source = "./modules/aws-region-base/networking" 
   region              = var.primary_region
@@ -17,10 +19,34 @@ module "secondary_networking" {
   public_subnet_cidrs = var.secondary_public_subnet_cidrs
   private_subnet_cidrs = var.secondary_private_subnet_cidrs
   environment_tag     = "DisasterRecovery"
-
   providers = {
     aws = aws.secondary
   }
+}
+
+module "vpc_peering" {
+  source = "./modules/aws-region-base/peering"
+
+  primary_region             = var.primary_region
+  secondary_region           = var.secondary_region
+  primary_vpc_id             = module.primary_networking.vpc_id
+  primary_vpc_cidr           = var.primary_vpc_cidr
+  primary_private_subnet_ids = module.primary_networking.private_subnet_ids
+  primary_public_subnet_ids  = module.primary_networking.public_subnet_ids
+  secondary_vpc_id           = module.secondary_networking.vpc_id
+  secondary_vpc_cidr         = var.secondary_vpc_cidr
+  secondary_private_subnet_ids = module.secondary_networking.private_subnet_ids
+  secondary_public_subnet_ids  = module.secondary_networking.public_subnet_ids
+
+  providers = {
+    aws.primary   = aws.primary
+    aws.secondary = aws.secondary
+  }
+
+  depends_on = [
+    module.primary_networking,
+    module.secondary_networking
+  ]
 }
 
 locals {
@@ -38,11 +64,10 @@ locals {
   ]
 }
 
-# Call the EKS module for the primary region
+# Create EKS clusters without Kubernetes/Helm providers first
 module "primary_eks" {
-  source = "./modules/aws-region-base/eks" # Path to your EKS module
+  source = "./modules/aws-region-base/eks"
 
-  # Pass variables to the module
   region                = var.primary_region
   environment_tag       = "Production"
   vpc_id                = module.primary_networking.vpc_id
@@ -55,22 +80,19 @@ module "primary_eks" {
   node_group_max_size   = var.node_group_max_size
   node_group_min_size   = var.node_group_min_size
   allowed_inbound_cidrs = local.primary_eks_allowed_cidrs
-  # Explicitly pass the primary providers to the module
+
   providers = {
-    aws        = aws.primary
-    kubernetes = kubernetes.primary 
-    helm       = helm.primary      
-    tls        = tls.primary
+    aws = aws.primary
+    tls = tls.primary
   }
-    # Ensure peering is established and routes are updated before EKS security groups are finalized
+
   depends_on = [
-    module.vpc_peering # EKS depends on VPC peering for its security group CIDRs
+    module.vpc_peering
   ]
 }
 
-# Call the EKS module for the secondary region
 module "secondary_eks" {
-  source = "./modules/aws-region-base/eks" # Path to your EKS module
+  source = "./modules/aws-region-base/eks"
 
   region                = var.secondary_region
   environment_tag       = "DisasterRecovery"
@@ -80,116 +102,42 @@ module "secondary_eks" {
   cluster_name          = "${var.cluster_name_prefix}-${var.secondary_region}"
   kubernetes_version    = var.kubernetes_version
   node_instance_type    = var.node_instance_type
-  # For warm standby, secondary region desired size might be lower
-  node_group_desired_size = 0 # Scale to 0 for cost savings in standby
+  node_group_desired_size = 0
   node_group_max_size   = var.node_group_max_size
-  node_group_min_size   = 0 # Allow scaling down to 0
+  node_group_min_size   = 0
   allowed_inbound_cidrs = local.secondary_eks_allowed_cidrs
 
   providers = {
-    aws        = aws.secondary
-    kubernetes = kubernetes.secondary 
-    helm       = helm.secondary      
-    tls        = tls.secondary
+    aws = aws.secondary
+    tls = tls.secondary
   }
-    # Ensure peering is established and routes are updated before EKS security groups are finalized
+
   depends_on = [
-    module.vpc_peering # EKS depends on VPC peering for its security group CIDRs
+    module.vpc_peering
   ]
 }
 
-module "vpc_peering" {
-  source = "./modules/aws-region-base/peering"
-
-  primary_region             = var.primary_region
-  secondary_region           = var.secondary_region
-  primary_vpc_id             = module.primary_networking.vpc_id
-  primary_vpc_cidr           = var.primary_vpc_cidr
-  primary_private_subnet_ids = module.primary_networking.private_subnet_ids
-  primary_public_subnet_ids  = module.primary_networking.public_subnet_ids
-  secondary_vpc_id           = module.secondary_networking.vpc_id
-  secondary_vpc_cidr         = var.secondary_vpc_cidr
-  secondary_private_subnet_ids = module.secondary_networking.private_subnet_ids
-  secondary_public_subnet_ids  = module.secondary_networking.public_subnet_ids
-
-  # Pass both providers to the peering module as it operates across regions
-  providers = {
-    aws.primary   = aws.primary
-    aws.secondary = aws.secondary
-  }
-
-  # Ensure networking is complete before peering
-  depends_on = [
-    module.primary_networking,
-    module.secondary_networking
-  ]
-}
-# --- Data Sources for Existing EKS Clusters ---
-# These data sources read the details of the EKS clusters created by the modules.
-
-# Primary EKS Cluster Data
+# Data sources for EKS clusters (after they're created)
 data "aws_eks_cluster" "primary" {
   provider = aws.primary
   name     = module.primary_eks.cluster_name
   depends_on = [module.primary_eks]
 }
 
-# Primary EKS Cluster Auth Data
 data "aws_eks_cluster_auth" "primary" {
   provider = aws.primary
   name     = module.primary_eks.cluster_name
   depends_on = [module.primary_eks]
 }
 
-# Secondary EKS Cluster Data
 data "aws_eks_cluster" "secondary" {
   provider = aws.secondary
   name     = module.secondary_eks.cluster_name
   depends_on = [module.secondary_eks]
 }
 
-# Secondary EKS Cluster Auth Data
 data "aws_eks_cluster_auth" "secondary" {
   provider = aws.secondary
   name     = module.secondary_eks.cluster_name
   depends_on = [module.secondary_eks]
-}
-
-# --- Dynamic Kubernetes Provider Configuration for Primary EKS ---
-# This configures the 'kubernetes.primary' provider with actual EKS cluster details
-# It depends on the primary EKS cluster being fully created and its data sources populated.
-provider "kubernetes" {
-  alias = "primary"
-  host                   = data.aws_eks_cluster.primary.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.primary.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.primary.token
-}
-
-# --- Dynamic Kubernetes Provider Configuration for Secondary EKS ---
-provider "kubernetes" {
-  alias = "secondary"
-  host                   = data.aws_eks_cluster.secondary.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.secondary.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.secondary.token
-
-}
-
-# --- Dynamic Helm Provider Configuration for Primary EKS ---
-provider "helm" {
-  alias = "primary"
-  kubernetes {
-    host                   = data.aws_eks_cluster.primary.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.primary.certificate_authority[0].data)
-    token                  = data.aws_eks_cluster_auth.primary.token
-  }
-}
-
-# --- Dynamic Helm Provider Configuration for Secondary EKS ---
-provider "helm" {
-  alias = "secondary"
-  kubernetes {
-    host                   = data.aws_eks_cluster.secondary.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.secondary.certificate_authority[0].data)
-    token                  = data.aws_eks_cluster_auth.secondary.token
-  }
 }

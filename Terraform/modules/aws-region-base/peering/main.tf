@@ -1,11 +1,11 @@
 # --- VPC Peering Connection Module Resources ---
 
-# Explicitly declare required providers for this module
 terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
+      configuration_aliases = [aws.primary, aws.secondary]
     }
   }
 }

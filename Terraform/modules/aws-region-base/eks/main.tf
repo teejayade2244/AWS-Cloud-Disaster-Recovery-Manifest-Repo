@@ -1,15 +1,15 @@
 # --- EKS Cluster Module Resources ---
-
-# Explicitly declare the required providers for this module
 terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0" # Use a compatible version
+      version = "~> 5.0"
+      configuration_aliases = [aws]
     }
-    tls = { # TLS provider is still needed for OIDC thumbprint
+    tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.0" # Use a compatible version
+      version = "~> 4.0"
+      configuration_aliases = [tls]
     }
   }
 }
