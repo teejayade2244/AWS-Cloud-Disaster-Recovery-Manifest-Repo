@@ -86,9 +86,9 @@ module "primary_eks" {
     tls = tls.primary
   }
 
-  depends_on = [
-    module.vpc_peering
-  ]
+  # depends_on = [
+  #   module.vpc_peering
+  # ]
 }
 
 module "secondary_eks" {
@@ -112,8 +112,8 @@ module "secondary_eks" {
     tls = tls.secondary
   }
 
-  depends_on = [
-    module.vpc_peering
-  ]
+  # depends_on = [
+  #   module.vpc_peering
+  # ]
 }
 
