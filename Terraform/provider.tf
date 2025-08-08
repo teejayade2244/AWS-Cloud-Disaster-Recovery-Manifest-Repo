@@ -12,6 +12,10 @@ terraform {
       source = "hashicorp/helm"
       version = "2.12.1" 
     }
+    tls = { # TLS provider is still needed for OIDC thumbprint
+      source  = "hashicorp/tls"
+      version = "~> 4.0" # Use a compatible version
+    }
   }
 }
 

@@ -82,6 +82,7 @@ resource "aws_eks_cluster" "main" {
     subnet_ids         = var.private_subnet_ids 
     endpoint_private_access = true 
     endpoint_public_access  = false
+    security_group_ids = [aws_security_group.eks_cluster_sg.id]
   }
 
   # Ensure that the EKS cluster is created before the node group
@@ -195,4 +196,40 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_controller_policy_attach"
 # Data source for current AWS account ID
 data "aws_caller_identity" "current" {
   provider = aws
+}
+
+
+# --- EKS Cluster Security Group ---
+# This security group will be associated with the EKS cluster's ENIs
+# to control access to the Kubernetes API endpoint.
+resource "aws_security_group" "eks_cluster_sg" {
+  provider = aws
+  name        = "${var.cluster_name}-eks-cluster-sg"
+  description = "Security group for EKS cluster control plane communication"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    # Allow access from your current IP for testing.
+    # In production, restrict this to specific trusted IPs (e.g., bastion host, CI/CD).
+    # You can get your current public IP by visiting "what is my ip" on Google.
+    # For broader testing, you can use "0.0.0.0/0" but this is NOT recommended for production.
+    cidr_blocks = ["0.0.0.0/0"] # <<-- CONSIDER REPLACING WITH YOUR PUBLIC IP CIDR (e.g., "X.X.X.X/32")
+    description = "Allow inbound HTTPS to EKS API from specified CIDRs"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
+  tags = {
+    Name        = "${var.cluster_name}-eks-cluster-sg"
+    Environment = var.environment_tag
+  }
 }
