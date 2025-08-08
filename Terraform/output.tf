@@ -61,10 +61,10 @@ output "primary_eks_cluster_certificate_authority_data" {
   value       = module.primary_eks.cluster_certificate_authority_data # Correctly references module output
 }
 
-output "primary_alb_ingress_controller_role_arn" {
-  description = "ARN of the IAM role for the ALB Ingress Controller Service Account in the primary region."
-  value       = module.primary_eks.alb_ingress_controller_role_arn # Correctly references module output
-}
+# output "primary_alb_ingress_controller_role_arn" {
+#   description = "ARN of the IAM role for the ALB Ingress Controller Service Account in the primary region."
+#   value       = module.primary_eks.alb_ingress_controller_role_arn # Correctly references module output
+# }
 
 # --- Secondary Region EKS Outputs ---
 output "secondary_eks_cluster_name" {
@@ -87,7 +87,7 @@ output "secondary_eks_cluster_certificate_authority_data" {
   value       = module.secondary_eks.cluster_certificate_authority_data # Correctly references module output
 }
 
-output "secondary_alb_ingress_controller_role_arn" {
-  description = "ARN of the IAM role for the ALB Ingress Controller Service Account in the secondary region."
-  value       = module.secondary_eks.alb_ingress_controller_role_arn # Correctly references module output
-}
+# output "secondary_alb_ingress_controller_role_arn" {
+#   description = "ARN of the IAM role for the ALB Ingress Controller Service Account in the secondary region."
+#   value       = module.secondary_eks.alb_ingress_controller_role_arn # Correctly references module output
+# }
