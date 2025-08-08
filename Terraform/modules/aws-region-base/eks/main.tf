@@ -14,6 +14,7 @@ terraform {
   }
 }
 
+
 # --- IAM Roles for EKS ---
 
 # EKS Cluster IAM Role
@@ -216,41 +217,41 @@ data "aws_iam_policy" "alb_ingress_controller_policy" {
 }
 
 # IAM Role for ALB Ingress Controller Service Account
-# resource "aws_iam_role" "alb_ingress_controller_role" {
-#   provider = aws
-#   name     = "${var.cluster_name}-alb-ingress-controller-role"
+resource "aws_iam_role" "alb_ingress_controller_role" {
+  provider = aws
+  name     = "${var.cluster_name}-alb-ingress-controller-role"
 
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect = "Allow"
-#         Principal = {
-#           Federated = aws_iam_openid_connect_provider.main.arn
-#         }
-#         Action = "sts:AssumeRoleWithWebIdentity"
-#         Condition = {
-#           StringEquals = {
-#             "${replace(aws_iam_openid_connect_provider.main.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
-#             "${replace(aws_iam_openid_connect_provider.main.url, "https://", "")}:aud" = "sts.amazonaws.com"
-#           }
-#         }
-#       }
-#     ]
-#   })
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.main.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.main.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+            "${replace(aws_iam_openid_connect_provider.main.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
 
-#   tags = {
-#     Name        = "${var.cluster_name}-alb-ingress-controller-role"
-#     Environment = var.environment_tag
-#   }
-# }
+  tags = {
+    Name        = "${var.cluster_name}-alb-ingress-controller-role"
+    Environment = var.environment_tag
+  }
+}
 
 # Attach the ALB Ingress Controller Policy to its IAM Role
-# resource "aws_iam_role_policy_attachment" "alb_ingress_controller_policy_attach" {
-#   provider   = aws
-#   policy_arn = data.aws_iam_policy.alb_ingress_controller_policy.arn
-#   role       = aws_iam_role.alb_ingress_controller_role.name
-# }
+resource "aws_iam_role_policy_attachment" "alb_ingress_controller_policy_attach" {
+  provider   = aws
+  policy_arn = data.aws_iam_policy.alb_ingress_controller_policy.arn
+  role       = aws_iam_role.alb_ingress_controller_role.name
+}
 
 # Data source for current AWS account ID
 data "aws_caller_identity" "current" {
