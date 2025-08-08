@@ -76,58 +76,68 @@ terraform {
             values = [var.secondary_private_subnet_ids[count.index]]
           }
         }
+resource "aws_route" "primary_public_to_secondary" {
+  provider                  = aws.primary
+  count                     = length(var.primary_public_subnet_ids)
+  route_table_id            = element(data.aws_route_table.primary_public_subnet_route_tables.*.id, count.index)
+  destination_cidr_block    = var.secondary_vpc_cidr
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
 
-        # Add routes to ALL primary public subnets' route tables for secondary VPC CIDR
-        resource "aws_route" "primary_public_to_secondary" {
-          provider                  = aws.primary
-          count                     = length(var.primary_public_subnet_ids)
-          route_table_id            = element(data.aws_route_table.primary_public_subnet_route_tables.*.id, count.index)
-          destination_cidr_block    = var.secondary_vpc_cidr
-          vpc_peering_connection_id = aws_vpc_peering_connection.main.id
+  # Add lifecycle rule to ignore conflicts
+  lifecycle {
+    ignore_changes = [vpc_peering_connection_id]
+  }
 
-          # Ensure peering is established before adding routes
-          depends_on = [
-            aws_vpc_peering_connection_accepter.secondary # Depends on acceptor being ready
-          ]
-        }
+  depends_on = [
+    aws_vpc_peering_connection_accepter.secondary
+  ]
+}
 
-        # Add routes to ALL primary private subnets' route tables for secondary VPC CIDR
-        resource "aws_route" "primary_private_to_secondary" {
-          provider                  = aws.primary
-          count                     = length(var.primary_private_subnet_ids)
-          route_table_id            = element(data.aws_route_table.primary_private_subnet_route_tables.*.id, count.index)
-          destination_cidr_block    = var.secondary_vpc_cidr
-          vpc_peering_connection_id = aws_vpc_peering_connection.main.id
+# Add the same lifecycle rule to all other route resources
+resource "aws_route" "primary_private_to_secondary" {
+  provider                  = aws.primary
+  count                     = length(var.primary_private_subnet_ids)
+  route_table_id            = element(data.aws_route_table.primary_private_subnet_route_tables.*.id, count.index)
+  destination_cidr_block    = var.secondary_vpc_cidr
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
 
-          # Ensure peering is established before adding routes
-          depends_on = [
-            aws_vpc_peering_connection_accepter.secondary # Depends on acceptor being ready
-          ]
-        }
+  lifecycle {
+    ignore_changes = [vpc_peering_connection_id]
+  }
 
-        # Add routes to ALL secondary public subnets' route tables for primary VPC CIDR
-        resource "aws_route" "secondary_public_to_primary" {
-          provider                  = aws.secondary
-          count                     = length(var.secondary_public_subnet_ids)
-          route_table_id            = element(data.aws_route_table.secondary_public_subnet_route_tables.*.id, count.index)
-          destination_cidr_block    = var.primary_vpc_cidr
-          vpc_peering_connection_id = aws_vpc_peering_connection.main.id
+  depends_on = [
+    aws_vpc_peering_connection_accepter.secondary
+  ]
+}
 
-          depends_on = [
-            aws_vpc_peering_connection_accepter.secondary # Depends on acceptor being ready
-          ]
-        }
+resource "aws_route" "secondary_public_to_primary" {
+  provider                  = aws.secondary
+  count                     = length(var.secondary_public_subnet_ids)
+  route_table_id            = element(data.aws_route_table.secondary_public_subnet_route_tables.*.id, count.index)
+  destination_cidr_block    = var.primary_vpc_cidr
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
 
-        # Add routes to ALL secondary private subnets' route tables for primary VPC CIDR
-        resource "aws_route" "secondary_private_to_primary" {
-          provider                  = aws.secondary
-          count                     = length(var.secondary_private_subnet_ids)
-          route_table_id            = element(data.aws_route_table.secondary_private_subnet_route_tables.*.id, count.index)
-          destination_cidr_block    = var.primary_vpc_cidr
-          vpc_peering_connection_id = aws_vpc_peering_connection.main.id
+  lifecycle {
+    ignore_changes = [vpc_peering_connection_id]
+  }
 
-          depends_on = [
-            aws_vpc_peering_connection_accepter.secondary # Depends on acceptor being ready
-          ]
-        }
-        
+  depends_on = [
+    aws_vpc_peering_connection_accepter.secondary
+  ]
+}
+
+resource "aws_route" "secondary_private_to_primary" {
+  provider                  = aws.secondary
+  count                     = length(var.secondary_private_subnet_ids)
+  route_table_id            = element(data.aws_route_table.secondary_private_subnet_route_tables.*.id, count.index)
+  destination_cidr_block    = var.primary_vpc_cidr
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
+
+  lifecycle {
+    ignore_changes = [vpc_peering_connection_id]
+  }
+
+  depends_on = [
+    aws_vpc_peering_connection_accepter.secondary
+  ]
+}
