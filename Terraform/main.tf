@@ -23,6 +23,21 @@ module "secondary_networking" {
   }
 }
 
+locals {
+  terraform_server_private_ip_cidr = "10.0.2.111/32"
+
+  primary_eks_allowed_cidrs = [
+    var.primary_vpc_cidr,          
+    var.secondary_vpc_cidr,        
+    local.terraform_server_private_ip_cidr 
+  ]
+  secondary_eks_allowed_cidrs = [
+    var.secondary_vpc_cidr,       
+    var.primary_vpc_cidr,         
+    local.terraform_server_private_ip_cidr 
+  ]
+}
+
 # Call the EKS module for the primary region
 module "primary_eks" {
   source = "./modules/aws-region-base/eks" # Path to your EKS module
@@ -36,10 +51,10 @@ module "primary_eks" {
   cluster_name          = "${var.cluster_name_prefix}-${var.primary_region}"
   kubernetes_version    = var.kubernetes_version
   node_instance_type    = var.node_instance_type
-  node_group_desired_size = var.node_group_desired_size # Can be overridden in dev.tfvars
+  node_group_desired_size = var.node_group_desired_size 
   node_group_max_size   = var.node_group_max_size
   node_group_min_size   = var.node_group_min_size
-
+  allowed_inbound_cidrs = local.primary_eks_allowed_cidrs
   # Explicitly pass the primary providers to the module
   providers = {
     aws        = aws.primary
@@ -47,13 +62,16 @@ module "primary_eks" {
     helm       = helm.primary      
     tls        = tls.primary
   }
+    # Ensure peering is established and routes are updated before EKS security groups are finalized
+  depends_on = [
+    module.vpc_peering # EKS depends on VPC peering for its security group CIDRs
+  ]
 }
 
 # Call the EKS module for the secondary region
 module "secondary_eks" {
   source = "./modules/aws-region-base/eks" # Path to your EKS module
 
-  # Pass variables to the module
   region                = var.secondary_region
   environment_tag       = "DisasterRecovery"
   vpc_id                = module.secondary_networking.vpc_id
@@ -66,16 +84,46 @@ module "secondary_eks" {
   node_group_desired_size = 0 # Scale to 0 for cost savings in standby
   node_group_max_size   = var.node_group_max_size
   node_group_min_size   = 0 # Allow scaling down to 0
+  allowed_inbound_cidrs = local.secondary_eks_allowed_cidrs
 
-  # Explicitly pass the secondary providers to the module
   providers = {
     aws        = aws.secondary
     kubernetes = kubernetes.secondary 
     helm       = helm.secondary      
     tls        = tls.secondary
   }
+    # Ensure peering is established and routes are updated before EKS security groups are finalized
+  depends_on = [
+    module.vpc_peering # EKS depends on VPC peering for its security group CIDRs
+  ]
 }
 
+module "vpc_peering" {
+  source = "./modules/aws-region-base/peering"
+
+  primary_region             = var.primary_region
+  secondary_region           = var.secondary_region
+  primary_vpc_id             = module.primary_networking.vpc_id
+  primary_vpc_cidr           = var.primary_vpc_cidr
+  primary_private_subnet_ids = module.primary_networking.private_subnet_ids
+  primary_public_subnet_ids  = module.primary_networking.public_subnet_ids
+  secondary_vpc_id           = module.secondary_networking.vpc_id
+  secondary_vpc_cidr         = var.secondary_vpc_cidr
+  secondary_private_subnet_ids = module.secondary_networking.private_subnet_ids
+  secondary_public_subnet_ids  = module.secondary_networking.public_subnet_ids
+
+  # Pass both providers to the peering module as it operates across regions
+  providers = {
+    aws.primary   = aws.primary
+    aws.secondary = aws.secondary
+  }
+
+  # Ensure networking is complete before peering
+  depends_on = [
+    module.primary_networking,
+    module.secondary_networking
+  ]
+}
 # --- Data Sources for Existing EKS Clusters ---
 # These data sources read the details of the EKS clusters created by the modules.
 

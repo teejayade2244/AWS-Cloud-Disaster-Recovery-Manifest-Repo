@@ -1,11 +1,12 @@
-# Variables for the generic EKS module
+# --- EKS Cluster Module Variables ---
+
 variable "region" {
-  description = "The AWS region where the EKS cluster will be deployed."
+  description = "The AWS region for the EKS cluster."
   type        = string
 }
 
 variable "environment_tag" {
-  description = "Tag for the environment (e.g., Production, DisasterRecovery)."
+  description = "Environment tag for resources (e.g., 'Production', 'DisasterRecovery')."
   type        = string
 }
 
@@ -15,17 +16,17 @@ variable "vpc_id" {
 }
 
 variable "private_subnet_ids" {
-  description = "List of private subnet IDs for EKS worker nodes."
+  description = "A list of private subnet IDs for EKS worker nodes."
   type        = list(string)
 }
 
 variable "public_subnet_ids" {
-  description = "List of public subnet IDs for EKS Load Balancers."
+  description = "A list of public subnet IDs for EKS Load Balancers."
   type        = list(string)
 }
 
 variable "cluster_name" {
-  description = "Name for the EKS cluster."
+  description = "Name of the EKS cluster."
   type        = string
 }
 
@@ -52,4 +53,10 @@ variable "node_group_max_size" {
 variable "node_group_min_size" {
   description = "Minimum number of worker nodes in the EKS node group."
   type        = number
+}
+
+# New variable for inbound CIDRs to the EKS API endpoint
+variable "allowed_inbound_cidrs" {
+  description = "List of CIDR blocks allowed to access the EKS cluster API endpoint (port 443)."
+  type        = list(string)
 }
