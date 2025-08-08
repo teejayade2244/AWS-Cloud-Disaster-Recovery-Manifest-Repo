@@ -38,6 +38,11 @@ module "vpc_peering" {
   secondary_private_subnet_ids = module.secondary_networking.private_subnet_ids
   secondary_public_subnet_ids  = module.secondary_networking.public_subnet_ids
 
+  primary_public_route_table_id   = module.primary_networking.public_route_table_id
+  primary_private_route_table_ids = module.primary_networking.private_route_table_ids
+  secondary_public_route_table_id = module.secondary_networking.public_route_table_id
+  secondary_private_route_table_ids = module.secondary_networking.private_route_table_ids
+
   providers = {
     aws.primary   = aws.primary
     aws.secondary = aws.secondary
