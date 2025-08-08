@@ -136,9 +136,8 @@ resource "aws_eks_node_group" "main" {
 }
 
 # --- AWS Load Balancer Controller (Helm Chart) ---
-# deploys the ALB Ingress Controller into your EKS cluster
+# deploys the ALB Ingress Controller into the EKS cluster
 # It requires OIDC provider and IAM role for service account
-
 # Create OIDC provider for the EKS cluster
 resource "aws_iam_openid_connect_provider" "main" {
   provider = aws
@@ -212,11 +211,7 @@ resource "aws_security_group" "eks_cluster_sg" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    # Allow access from your current IP for testing.
-    # In production, restrict this to specific trusted IPs (e.g., bastion host, CI/CD).
-    # You can get your current public IP by visiting "what is my ip" on Google.
-    # For broader testing, you can use "0.0.0.0/0" but this is NOT recommended for production.
-    cidr_blocks = ["0.0.0.0/0"] # <<-- CONSIDER REPLACING WITH YOUR PUBLIC IP CIDR (e.g., "X.X.X.X/32")
+    cidr_blocks = ["0.0.0.0/0"] 
     description = "Allow inbound HTTPS to EKS API from specified CIDRs"
   }
 
