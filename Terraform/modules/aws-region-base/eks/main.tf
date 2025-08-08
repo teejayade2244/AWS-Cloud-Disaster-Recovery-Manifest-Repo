@@ -246,11 +246,11 @@ data "aws_iam_policy" "alb_ingress_controller_policy" {
 # }
 
 # Attach the ALB Ingress Controller Policy to its IAM Role
-resource "aws_iam_role_policy_attachment" "alb_ingress_controller_policy_attach" {
-  provider   = aws
-  policy_arn = data.aws_iam_policy.alb_ingress_controller_policy.arn
-  role       = aws_iam_role.alb_ingress_controller_role.name
-}
+# resource "aws_iam_role_policy_attachment" "alb_ingress_controller_policy_attach" {
+#   provider   = aws
+#   policy_arn = data.aws_iam_policy.alb_ingress_controller_policy.arn
+#   role       = aws_iam_role.alb_ingress_controller_role.name
+# }
 
 # Data source for current AWS account ID
 data "aws_caller_identity" "current" {
