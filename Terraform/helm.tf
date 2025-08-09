@@ -23,10 +23,9 @@ provider "helm" {
     cluster_ca_certificate = base64decode(data.aws_eks_cluster.primary.certificate_authority[0].data)
     token                  = data.aws_eks_cluster_auth.primary.token
   }
-  # Force Terraform to wait for the cluster
-  depends_on = [module.primary_eks]
 }
 
+# Dynamic Helm Provider Configuration for Secondary EKS
 provider "helm" {
   alias = "secondary"
   kubernetes {
@@ -34,10 +33,7 @@ provider "helm" {
     cluster_ca_certificate = base64decode(data.aws_eks_cluster.secondary.certificate_authority[0].data)
     token                  = data.aws_eks_cluster_auth.secondary.token
   }
-
-  depends_on = [module.secondary_eks]
 }
-
 
 # Primary EKS Cluster Data
 data "aws_eks_cluster" "primary" {
@@ -107,8 +103,10 @@ resource "helm_release" "primary_aws_load_balancer_controller" {
   }
 
   # Dependencies are handled by the Helm provider's configuration and the EKS module
-  depends_on = [
+    depends_on = [
     module.primary_eks,
+    data.aws_eks_cluster.primary,
+    data.aws_eks_cluster_auth.primary
   ]
 }
 
@@ -148,7 +146,9 @@ resource "helm_release" "secondary_aws_load_balancer_controller" {
   }
 
   # Dependencies are handled by the Helm provider's configuration and the EKS module
-  depends_on = [
+   depends_on = [
     module.secondary_eks,
+    data.aws_eks_cluster.secondary,
+    data.aws_eks_cluster_auth.secondary
   ]
 }
