@@ -36,6 +36,38 @@ provider "helm" {
   }
 }
 
+# Primary EKS Cluster Data
+data "aws_eks_cluster" "primary" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
+  # Add explicit dependency to ensure the EKS module has finished creating the cluster
+  depends_on = [module.primary_eks]
+}
+
+# Primary EKS Cluster Auth Data
+data "aws_eks_cluster_auth" "primary" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
+  # Add explicit dependency
+  depends_on = [module.primary_eks]
+}
+
+# Secondary EKS Cluster Data
+data "aws_eks_cluster" "secondary" {
+  provider = aws.secondary
+  name     = module.secondary_eks.cluster_name
+  # Add explicit dependency
+  depends_on = [module.secondary_eks]
+}
+
+# Secondary EKS Cluster Auth Data
+data "aws_eks_cluster_auth" "secondary" {
+  provider = aws.secondary
+  name     = module.secondary_eks.cluster_name
+  # Add explicit dependency
+  depends_on = [module.secondary_eks]
+}
+
 # Deploy ALB Ingress Controller using Helm for Primary EKS
 resource "helm_release" "primary_aws_load_balancer_controller" {
   provider = helm.primary
