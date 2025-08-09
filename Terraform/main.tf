@@ -105,9 +105,9 @@ module "secondary_eks" {
   cluster_name          = "${var.cluster_name_prefix}-${var.secondary_region}"
   kubernetes_version    = var.kubernetes_version
   node_instance_type    = var.node_instance_type
-  node_group_desired_size = 0
+  node_group_desired_size = 1
   node_group_max_size   = var.node_group_max_size
-  node_group_min_size   = 0
+  node_group_min_size   = 1
   allowed_inbound_cidrs = local.secondary_eks_allowed_cidrs
 
   providers = {
