@@ -1,71 +1,82 @@
-# --- Global Variables for Multi-Region Deployment ---
-# Primary AWS Region
+# Define the primary AWS region
 variable "primary_region" {
-  description = "The AWS region for the primary deployment (e.g., eu-west-2)."
+  description = "The AWS region for the primary deployment."
   type        = string
+  default     = "eu-west-2" # London
 }
 
-# Secondary AWS Region (for Disaster Recovery)
+# Define the secondary AWS region
 variable "secondary_region" {
-  description = "The AWS region for the secondary (DR) deployment (e.g., us-east-1)."
+  description = "The AWS region for the secondary (DR) deployment."
   type        = string
+  default     = "us-east-1" # N. Virginia (Changed to us-east-1 as it's a common DR pairing)
 }
 
-# --- Primary Region Networking Variables ---
+# Define the CIDR block for the primary VPC
 variable "primary_vpc_cidr" {
   description = "CIDR block for the VPC in the primary region."
   type        = string
+  default     = "10.0.0.0/16"
 }
 
-variable "primary_public_subnet_cidrs" {
-  description = "List of CIDR blocks for public subnets in the primary region (e.g., [\"10.0.1.0/24\", \"10.0.2.0/24\"])."
-  type        = list(string)
-}
-
-variable "primary_private_subnet_cidrs" {
-  description = "List of CIDR blocks for private subnets in the primary region (e.g., [\"10.0.10.0/24\", \"10.0.11.0/24\"])."
-  type        = list(string)
-}
-
-# --- Secondary Region Networking Variables ---
+# Define the CIDR block for the secondary VPC
 variable "secondary_vpc_cidr" {
   description = "CIDR block for the VPC in the secondary region."
   type        = string
+  default     = "10.1.0.0/16" # Ensure this does not overlap with primary_vpc_cidr
 }
 
+# Define the public subnet CIDR blocks for primary region
+variable "primary_public_subnet_cidrs" {
+  description = "List of CIDR blocks for public subnets in the primary region."
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+}
+
+# Define the private subnet CIDR blocks for primary region
+variable "primary_private_subnet_cidrs" {
+  description = "List of CIDR blocks for private subnets in the primary region."
+  type        = list(string)
+  default     = ["10.0.10.0/24", "10.0.11.0/24"]
+}
+
+# Define the public subnet CIDR blocks for secondary region
 variable "secondary_public_subnet_cidrs" {
-  description = "List of CIDR blocks for public subnets in the secondary region (e.g., [\"10.1.1.0/24\", \"10.1.2.0/24\"])."
+  description = "List of CIDR blocks for public subnets in the secondary region."
   type        = list(string)
+  default     = ["10.1.1.0/24", "10.1.2.0/24"]
 }
 
+# Define the private subnet CIDR blocks for secondary region
 variable "secondary_private_subnet_cidrs" {
-  description = "List of CIDR blocks for private subnets in the secondary region (e.g., [\"10.1.10.0/24\", \"10.1.11.0/24\"])."
+  description = "List of CIDR blocks for private subnets in the secondary region."
   type        = list(string)
+  default     = ["10.1.10.0/24", "10.1.11.0/24"]
 }
 
-# # --- EKS Cluster Variables (will be used in compute module) ---
+# EKS Cluster Variables
 variable "cluster_name_prefix" {
-  description = "Prefix for the EKS cluster names (e.g., 'aura-flow')."
+  description = "Prefix for EKS cluster names."
   type        = string
-  default     = "aura-flow"
+  default     = "aura-flow-dev"
 }
 
 variable "kubernetes_version" {
   description = "Kubernetes version for the EKS clusters."
   type        = string
-  default     = "1.28" # Or your preferred version
+  default     = "1.28"
 }
 
 variable "node_instance_type" {
   description = "EC2 instance type for EKS worker nodes."
   type        = string
-  default     = "t3.medium" # Adjust based on your needs
+  default     = "t3.medium"
 }
 
 variable "node_group_desired_size" {
   description = "Desired number of worker nodes in the EKS node group."
   type        = number
-  default     = 2 # For warm standby, primary might be higher, secondary lower
+  default     = 2
 }
 
 variable "node_group_max_size" {
@@ -80,33 +91,114 @@ variable "node_group_min_size" {
   default     = 1
 }
 
-# # --- RDS Database Variables (will be used in rds module) ---
-# variable "db_instance_type" {
-#   description = "RDS DB instance type (e.g., db.t3.micro)."
-#   type        = string
-#   default     = "db.t3.micro"
-# }
+# --- Database Variables for Primary Region ---
+variable "primary_db_name" {
+  description = "The name of the database for the primary region."
+  type        = string
+}
 
-# variable "db_allocated_storage" {
-#   description = "Allocated storage for the database in GB."
-#   type        = number
-#   default     = 20
-# }
+variable "primary_db_instance_class" {
+  description = "The instance type of the database for the primary region (e.g., db.t3.small)."
+  type        = string
+}
 
-# variable "db_engine_version" {
-#   description = "PostgreSQL engine version."
-#   type        = string
-#   default     = "14.7" 
-# }
+variable "primary_db_engine" {
+  description = "The database engine to use for the primary region (e.g., postgres, mysql)."
+  type        = string
+}
 
-# variable "db_username" {
-#   description = "Master username for the database."
-#   type        = string
-#   sensitive   = true # Mark as sensitive to prevent logging
-# }
+variable "primary_db_engine_version" {
+  description = "The version of the database engine for the primary region."
+  type        = string
+}
 
-# variable "db_password" {
-#   description = "Master password for the database."
-#   type        = string
-#   sensitive   = true # Mark as sensitive
-# }
+variable "primary_db_allocated_storage" {
+  description = "The allocated storage in GB for the primary region database."
+  type        = number
+}
+
+variable "primary_db_master_username" {
+  description = "The master username for the primary region database."
+  type        = string
+}
+
+variable "primary_db_port" {
+  description = "The port on which the primary database accepts connections."
+  type        = number
+}
+
+variable "primary_db_skip_final_snapshot" {
+  description = "Set to true to skip the final DB snapshot when deleting the primary DB instance."
+  type        = bool
+}
+
+variable "primary_db_backup_retention_period" {
+  description = "The days to retain backups for the primary database. Must be between 0 and 35."
+  type        = number
+}
+
+variable "primary_db_deletion_protection" {
+  description = "Set to true to enable deletion protection for the primary DB instance."
+  type        = bool
+}
+
+variable "primary_db_multi_az" {
+  description = "Specifies if the primary DB instance is Multi-AZ."
+  type        = bool
+}
+
+# --- Database Variables for Secondary Region ---
+variable "secondary_db_name" {
+  description = "The name of the database for the secondary region."
+  type        = string
+}
+
+variable "secondary_db_instance_class" {
+  description = "The instance type of the database for the secondary region (e.g., db.t3.micro)."
+  type        = string
+}
+
+variable "secondary_db_engine" {
+  description = "The database engine to use for the secondary region (e.g., postgres, mysql)."
+  type        = string
+}
+
+variable "secondary_db_engine_version" {
+  description = "The version of the database engine for the secondary region."
+  type        = string
+}
+
+variable "secondary_db_allocated_storage" {
+  description = "The allocated storage in GB for the secondary region database."
+  type        = number
+}
+
+variable "secondary_db_master_username" {
+  description = "The master username for the secondary region database."
+  type        = string
+}
+
+variable "secondary_db_port" {
+  description = "The port on which the secondary database accepts connections."
+  type        = number
+}
+
+variable "secondary_db_skip_final_snapshot" {
+  description = "Set to true to skip the final DB snapshot when deleting the secondary DB instance."
+  type        = bool
+}
+
+variable "secondary_db_backup_retention_period" {
+  description = "The days to retain backups for the secondary database. Must be between 0 and 35."
+  type        = number
+}
+
+variable "secondary_db_deletion_protection" {
+  description = "Set to true to enable deletion protection for the secondary DB instance."
+  type        = bool
+}
+
+variable "secondary_db_multi_az" {
+  description = "Specifies if the secondary DB instance is Multi-AZ."
+  type        = bool
+}
