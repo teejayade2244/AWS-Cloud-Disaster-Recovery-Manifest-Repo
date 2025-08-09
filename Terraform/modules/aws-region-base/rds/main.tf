@@ -13,12 +13,6 @@ terraform {
   }
 }
 
-# Local values to handle conditional logic
-locals {
-  is_read_replica = var.source_db_instance_arn != null && var.source_db_instance_arn != ""
-  create_primary  = !local.is_read_replica
-}
-
 # Generate a random, strong password for the master user
 # This will be generated for both primary and secondary.
 # For a read replica, this password is not used for replication,
@@ -89,7 +83,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "main" {
   # This instance is created only if source_db_instance_arn is NOT provided (i.e., it's a standalone DB)
   provider = aws
-  count    = local.create_primary ? 1 : 0
+  count    = var.source_db_instance_arn == null ? 1 : 0
   identifier             = "${lower(var.environment_tag)}-${lower(var.region)}-db-instance"
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
@@ -119,7 +113,7 @@ resource "aws_db_instance" "main" {
 resource "aws_db_instance" "read_replica" {
   # This instance is created only if source_db_instance_arn IS provided
   provider = aws
-  count    = local.is_read_replica ? 1 : 0
+  count    = var.source_db_instance_arn != null ? 1 : 0
 
   identifier              = "${lower(var.environment_tag)}-${lower(var.region)}-db-instance-replica"
   instance_class          = var.db_instance_class # Can be scaled differently from source
@@ -170,7 +164,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
     db_name  = var.db_name
     engine   = var.db_engine
     # Dynamically select host based on which instance type is created
-    host     = local.create_primary ? aws_db_instance.main[0].address : aws_db_instance.read_replica[0].address
+    host     = var.source_db_instance_arn == null ? aws_db_instance.main[0].address : aws_db_instance.read_replica[0].address
     port     = var.db_port
   })
   # Ensure the correct DB instance is created and password generated before storing secret
