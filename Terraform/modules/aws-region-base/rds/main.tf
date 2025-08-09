@@ -30,7 +30,7 @@ resource "random_password" "db_master_password" {
 # Create a security group for the RDS instance
 resource "aws_security_group" "db_sg" {
   provider = aws
-  name        = "${var.environment_tag}-${var.region}-db-sg"
+  name        = "${lower(var.environment_tag)}-${lower(var.region)}-db-sg"
   description = "Security group for RDS database"
   vpc_id      = var.vpc_id
 
@@ -68,7 +68,7 @@ data "aws_vpc" "selected" {
 # Create a DB Subnet Group for RDS
 resource "aws_db_subnet_group" "main" {
   provider = aws
-  name        = "${var.environment_tag}-${var.region}-db-subnet-group"
+  name        = "${lower(var.environment_tag)}-${lower(var.region)}-db-subnet-group"
   subnet_ids  = var.private_subnet_ids
   description = "DB Subnet Group for RDS instance"
 
@@ -84,7 +84,7 @@ resource "aws_db_instance" "main" {
   # This instance is created only if source_db_instance_arn is NOT provided (i.e., it's a standalone DB)
   provider = aws
   count    = var.source_db_instance_arn == null ? 1 : 0
-  identifier             = "${var.environment_tag}-${var.region}-db-instance"
+  identifier             = "${lower(var.environment_tag)}-${lower(var.region)}-db-instance"
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
   instance_class         = var.db_instance_class
@@ -115,7 +115,7 @@ resource "aws_db_instance" "read_replica" {
   provider = aws
   count    = var.source_db_instance_arn != null ? 1 : 0
 
-  identifier              = "${var.environment_tag}-${var.region}-db-instance-replica"
+  identifier              = "${lower(var.environment_tag)}-${lower(var.region)}-db-instance-replica"
   instance_class          = var.db_instance_class # Can be scaled differently from source
   allocated_storage       = var.db_allocated_storage # Can be scaled differently from source
   storage_type            = "gp2"
