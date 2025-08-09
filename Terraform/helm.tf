@@ -106,7 +106,6 @@ resource "helm_release" "primary_aws_load_balancer_controller" {
   # Dependencies are handled by the Helm provider's configuration and the EKS module
   depends_on = [
     module.primary_eks,
-    kubernetes.primary,
   ]
 }
 
@@ -148,6 +147,5 @@ resource "helm_release" "secondary_aws_load_balancer_controller" {
   # Dependencies are handled by the Helm provider's configuration and the EKS module
   depends_on = [
     module.secondary_eks,
-    kubernetes.secondary,
   ]
 }
