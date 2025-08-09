@@ -75,7 +75,7 @@ resource "helm_release" "primary_aws_load_balancer_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  version    = "1.7.0"
+  version    = "1.7.0" # Use a compatible version for your K8s version
 
   set {
     name  = "clusterName"
@@ -97,21 +97,27 @@ resource "helm_release" "primary_aws_load_balancer_controller" {
     value = module.primary_eks.alb_ingress_controller_role_arn
   }
 
+  # --- NEW: Explicitly set vpcID to avoid metadata introspection issues ---
+  set {
+    name  = "vpcID"
+    value = module.primary_networking.vpc_id # Retrieve VPC ID from networking module output
+  }
+
+  # Dependencies are handled by the Helm provider's configuration and the EKS module
   depends_on = [
     module.primary_eks,
-    data.aws_eks_cluster.primary,
-    data.aws_eks_cluster_auth.primary
+    kubernetes.primary,
   ]
 }
 
-# Deploy ALB Ingress Controller using Helm for Secondary EKS
+# --- Deploy ALB Ingress Controller using Helm for Secondary EKS ---
 resource "helm_release" "secondary_aws_load_balancer_controller" {
   provider = helm.secondary
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  version    = "1.7.0"
+  version    = "1.7.0" # Use a compatible version for your K8s version
 
   set {
     name  = "clusterName"
@@ -133,9 +139,15 @@ resource "helm_release" "secondary_aws_load_balancer_controller" {
     value = module.secondary_eks.alb_ingress_controller_role_arn
   }
 
+  # --- NEW: Explicitly set vpcID to avoid metadata introspection issues ---
+  set {
+    name  = "vpcID"
+    value = module.secondary_networking.vpc_id # Retrieve VPC ID from networking module output
+  }
+
+  # Dependencies are handled by the Helm provider's configuration and the EKS module
   depends_on = [
     module.secondary_eks,
-    data.aws_eks_cluster.secondary,
-    data.aws_eks_cluster_auth.secondary
+    kubernetes.secondary,
   ]
 }
