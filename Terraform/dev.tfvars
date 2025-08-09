@@ -48,3 +48,4 @@ secondary_db_skip_final_snapshot = true
 secondary_db_backup_retention_period = 1 
 secondary_db_deletion_protection = false 
 secondary_db_multi_az            = false 
+source_db_instance_arn = null
