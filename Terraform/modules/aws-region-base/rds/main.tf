@@ -92,7 +92,7 @@ resource "aws_db_instance" "main" {
   storage_type           = "gp2"
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
-  db_name                 = var.db_name
+  db_name                = var.db_name
   username               = var.db_master_username
   password               = random_password.db_master_password.result # Use generated password
   port                   = var.db_port
@@ -127,11 +127,11 @@ resource "aws_db_instance" "read_replica" {
   backup_retention_period = var.db_backup_retention_period
   deletion_protection     = var.db_deletion_protection
 
-  # --- CRITICAL FOR READ REPLICA ---
-  replicate_source_db_instance_arn = var.source_db_instance_arn
+  # --- CRITICAL FOR READ REPLICA - CORRECTED ARGUMENT NAME ---
+  replicate_source_db = var.source_db_instance_arn
 
   # Parameters like engine, engine_version, db_name, username, password, port
-  # are INHERITED from the source when replicate_source_db_instance_arn is used.
+  # are INHERITED from the source when replicate_source_db is used.
   tags = {
     Name        = "${var.environment_tag}-${var.region}-db-instance-replica"
     Environment = var.environment_tag
