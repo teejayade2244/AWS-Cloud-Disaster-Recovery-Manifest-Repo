@@ -13,6 +13,13 @@ terraform {
   }
 }
 
+# Local values to handle conditional logic
+locals {
+  is_read_replica = var.source_db_instance_arn != null && var.source_db_instance_arn != ""
+  create_primary  = !local.is_read_replica
+  deployment_type = local.is_read_replica ? "replica" : "primary"
+}
+
 # Generate a random, strong password for the master user
 # This will be generated for both primary and secondary.
 # For a read replica, this password is not used for replication,
@@ -30,9 +37,12 @@ resource "random_password" "db_master_password" {
 # Create a security group for the RDS instance
 resource "aws_security_group" "db_sg" {
   provider = aws
-  name        = "${lower(var.environment_tag)}-${lower(var.region)}-db-sg"
+  name        = "${lower(var.environment_tag)}-${lower(var.region)}-${local.deployment_type}-db-sg"
   description = "Security group for RDS database"
   vpc_id      = var.vpc_id
+  
+  # Explicitly set to avoid provider inconsistency bug
+  revoke_rules_on_delete = false
 
   # Inbound rule: Allow traffic from the VPC CIDR on the DB port
   ingress {
@@ -54,7 +64,7 @@ resource "aws_security_group" "db_sg" {
   }
 
   tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-sg"
+    Name        = "${var.environment_tag}-${var.region}-${local.deployment_type}-db-sg"
     Environment = var.environment_tag
   }
 }
@@ -68,12 +78,12 @@ data "aws_vpc" "selected" {
 # Create a DB Subnet Group for RDS
 resource "aws_db_subnet_group" "main" {
   provider = aws
-  name        = "${lower(var.environment_tag)}-${lower(var.region)}-db-subnet-group"
+  name        = "${lower(var.environment_tag)}-${lower(var.region)}-${local.deployment_type}-db-subnet-group"
   subnet_ids  = var.private_subnet_ids
   description = "DB Subnet Group for RDS instance"
 
   tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-subnet-group"
+    Name        = "${var.environment_tag}-${var.region}-${local.deployment_type}-db-subnet-group"
     Environment = var.environment_tag
   }
 }
@@ -83,8 +93,8 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "main" {
   # This instance is created only if source_db_instance_arn is NOT provided (i.e., it's a standalone DB)
   provider = aws
-  count    = var.source_db_instance_arn == null ? 1 : 0
-  identifier             = "${lower(var.environment_tag)}-${lower(var.region)}-db-instance"
+  count    = local.create_primary ? 1 : 0
+  identifier             = "${lower(var.environment_tag)}-${lower(var.region)}-${local.deployment_type}-db-instance"
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
   instance_class         = var.db_instance_class
@@ -103,7 +113,7 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false
 
   tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-instance"
+    Name        = "${var.environment_tag}-${var.region}-${local.deployment_type}-db-instance"
     Environment = var.environment_tag
   }
   depends_on = [random_password.db_master_password]
@@ -113,9 +123,9 @@ resource "aws_db_instance" "main" {
 resource "aws_db_instance" "read_replica" {
   # This instance is created only if source_db_instance_arn IS provided
   provider = aws
-  count    = var.source_db_instance_arn != null ? 1 : 0
+  count    = local.is_read_replica ? 1 : 0
 
-  identifier              = "${lower(var.environment_tag)}-${lower(var.region)}-db-instance-replica"
+  identifier              = "${lower(var.environment_tag)}-${lower(var.region)}-${local.deployment_type}-db-instance"
   instance_class          = var.db_instance_class # Can be scaled differently from source
   allocated_storage       = var.db_allocated_storage # Can be scaled differently from source
   storage_type            = "gp2"
@@ -133,7 +143,7 @@ resource "aws_db_instance" "read_replica" {
   # Parameters like engine, engine_version, db_name, username, password, port
   # are INHERITED from the source when replicate_source_db is used.
   tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-instance-replica"
+    Name        = "${var.environment_tag}-${var.region}-${local.deployment_type}-db-instance"
     Environment = var.environment_tag
   }
   # Ensure the password is generated even if not directly used by replica,
@@ -145,12 +155,12 @@ resource "aws_db_instance" "read_replica" {
 # AWS Secrets Manager Secret for DB Credentials
 resource "aws_secretsmanager_secret" "db_credentials" {
   provider = aws
-  name        = "${var.environment_tag}/${var.region}/db-credentials"
-  description = "RDS ${var.db_engine} master user credentials for ${var.environment_tag} in ${var.region}"
+  name        = "${var.environment_tag}/${var.region}/${local.deployment_type}/db-credentials"
+  description = "RDS ${var.db_engine} master user credentials for ${var.environment_tag} ${local.deployment_type} in ${var.region}"
   tags = {
     Environment = var.environment_tag
     Region      = var.region
-    Name        = "${var.environment_tag}-${var.region}-db-credentials"
+    Name        = "${var.environment_tag}-${var.region}-${local.deployment_type}-db-credentials"
   }
 }
 
@@ -164,7 +174,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
     db_name  = var.db_name
     engine   = var.db_engine
     # Dynamically select host based on which instance type is created
-    host     = var.source_db_instance_arn == null ? aws_db_instance.main[0].address : aws_db_instance.read_replica[0].address
+    host     = local.create_primary ? aws_db_instance.main[0].address : aws_db_instance.read_replica[0].address
     port     = var.db_port
   })
   # Ensure the correct DB instance is created and password generated before storing secret
