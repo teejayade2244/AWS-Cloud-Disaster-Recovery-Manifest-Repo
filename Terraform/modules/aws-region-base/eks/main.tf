@@ -195,7 +195,6 @@ resource "aws_eks_node_group" "main" {
 # --- IAM for ALB Ingress Controller Service Account ---
 # This section creates the OIDC provider and IAM role for the ALB Ingress Controller
 # It's placed here so the role ARN can be outputted from the module
-
 # Create OIDC provider for the EKS cluster
 resource "aws_iam_openid_connect_provider" "main" {
   provider = aws
@@ -210,8 +209,7 @@ data "tls_certificate" "eks_oidc_thumbprint" {
 }
 
 # Data source to get the AWSLoadBalancerControllerIAMPolicy
-# This assumes the policy is already created in your AWS account (as a managed policy or custom)
-# If not, you would need to define it as a resource here.
+# This assumes the policy is already created in  AWS account (as a managed policy or custom)
 data "aws_iam_policy" "alb_ingress_controller_policy" {
   arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/AWSLoadBalancerControllerIAMPolicy"
 }

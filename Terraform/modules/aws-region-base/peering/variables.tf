@@ -1,5 +1,4 @@
 # Variables for the generic VPC Peering module
-
 variable "primary_region" {
   description = "The AWS region of the primary VPC."
   type        = string

@@ -1,5 +1,3 @@
-        # --- VPC Peering Connection Module Resources ---
-
 terraform {
   required_providers {
     aws = {
@@ -11,8 +9,7 @@ terraform {
 }
 # --- VPC Peering Connection Module Resources ---
 
-
-# 1. Create VPC Peering Connection (initiated from primary region)
+# 1. VPC Peering Connection (initiated from primary region)
 resource "aws_vpc_peering_connection" "main" {
   provider      = aws.primary
   peer_vpc_id   = var.secondary_vpc_id
@@ -37,14 +34,11 @@ resource "aws_vpc_peering_connection_accepter" "secondary" {
 }
 
 # --- Route Table Updates ---
-# REMOVED: All data "aws_route_table" blocks.
-# Routes will now use direct inputs for route table IDs.
-
 # Add route to primary public route table for secondary VPC CIDR
 resource "aws_route" "primary_public_to_secondary" {
   provider                  = aws.primary
   # No 'count' here because there's only one public route table being targeted
-  route_table_id            = var.primary_public_route_table_id # Use direct input
+  route_table_id            = var.primary_public_route_table_id
   destination_cidr_block    = var.secondary_vpc_cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.main.id
 
@@ -56,8 +50,8 @@ resource "aws_route" "primary_public_to_secondary" {
 # Add routes to ALL primary private route tables for secondary VPC CIDR
 resource "aws_route" "primary_private_to_secondary" {
   provider                  = aws.primary
-  count                     = length(var.primary_private_route_table_ids) # Count based on the list of private RT IDs
-  route_table_id            = element(var.primary_private_route_table_ids, count.index) # Use direct input list
+  count                     = length(var.primary_private_route_table_ids) 
+  route_table_id            = element(var.primary_private_route_table_ids, count.index) 
   destination_cidr_block    = var.secondary_vpc_cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.main.id
 
@@ -69,8 +63,7 @@ resource "aws_route" "primary_private_to_secondary" {
 # Add route to secondary public route table for primary VPC CIDR
 resource "aws_route" "secondary_public_to_primary" {
   provider                  = aws.secondary
-  # No 'count' here
-  route_table_id            = var.secondary_public_route_table_id # Use direct input
+  route_table_id            = var.secondary_public_route_table_id 
   destination_cidr_block    = var.primary_vpc_cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.main.id
 
@@ -82,8 +75,8 @@ resource "aws_route" "secondary_public_to_primary" {
 # Add routes to ALL secondary private route tables for primary VPC CIDR
 resource "aws_route" "secondary_private_to_primary" {
   provider                  = aws.secondary
-  count                     = length(var.secondary_private_route_table_ids) # Count based on the list of private RT IDs
-  route_table_id            = element(var.secondary_private_route_table_ids, count.index) # Use direct input list
+  count                     = length(var.secondary_private_route_table_ids) 
+  route_table_id            = element(var.secondary_private_route_table_ids, count.index) 
   destination_cidr_block    = var.primary_vpc_cidr
   vpc_peering_connection_id = aws_vpc_peering_connection.main.id
 

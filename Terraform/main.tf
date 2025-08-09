@@ -37,7 +37,6 @@ module "vpc_peering" {
   secondary_vpc_cidr         = var.secondary_vpc_cidr
   secondary_private_subnet_ids = module.secondary_networking.private_subnet_ids
   secondary_public_subnet_ids  = module.secondary_networking.public_subnet_ids
-
   primary_public_route_table_id   = module.primary_networking.public_route_table_id
   primary_private_route_table_ids = module.primary_networking.private_route_table_ids
   secondary_public_route_table_id = module.secondary_networking.public_route_table_id
@@ -56,7 +55,6 @@ module "vpc_peering" {
 
 locals {
   terraform_server_private_ip_cidr = "10.0.2.111/32"
-
   primary_eks_allowed_cidrs = [
     var.primary_vpc_cidr,          
     var.secondary_vpc_cidr,        
