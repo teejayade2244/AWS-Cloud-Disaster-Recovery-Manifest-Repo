@@ -1,15 +1,4 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
-  }
-}
+
 # Generate a secure password that meets RDS requirements
 resource "random_password" "shared_db_master_password" {
   length           = 16
