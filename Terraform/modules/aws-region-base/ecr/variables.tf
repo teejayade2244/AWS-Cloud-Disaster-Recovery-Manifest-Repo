@@ -35,14 +35,14 @@ variable "scan_on_push" {
 variable "lifecycle_policy_rules" {
   description = "A list of map objects defining lifecycle policy rules for the repository."
   type = list(object({
-    rulePriority : number # Changed from rule_priority to rulePriority
+    rulePriority : number
     description   : string
     selection     : object({
-      tag_status : string
-      tag_prefix_list : list(string)
-      count_type : string
-      count_number : number
-      count_unit : string
+      tagStatus     : string # Changed from tag_status to tagStatus
+      tagPrefixList : list(string) # Changed from tag_prefix_list to tagPrefixList
+      countType     : string # Changed from count_type to countType
+      countNumber   : number # Changed from count_number to countNumber
+      countUnit     : string # Changed from count_unit to countUnit
     })
     action : object({
       type : string
@@ -50,28 +50,28 @@ variable "lifecycle_policy_rules" {
   }))
   default = [
     {
-      rulePriority = 1 # Changed from rule_priority to rulePriority
+      rulePriority = 1
       description   = "Delete untagged images after 7 days"
       selection = {
-        tag_status      = "untagged"
-        tag_prefix_list = [] # No specific prefix
-        count_type      = "sinceImagePushed"
-        count_number    = 7
-        count_unit      = "days"
+        tagStatus     = "untagged" # Changed from tag_status to tagStatus
+        tagPrefixList = [] # Changed from tag_prefix_list to tagPrefixList
+        countType     = "sinceImagePushed" # Changed from count_type to countType
+        countNumber   = 7 # Changed from count_number to countNumber
+        countUnit     = "days" # Changed from count_unit to countUnit
       }
       action = {
         type = "expire"
       }
     },
     {
-      rulePriority = 2 # Changed from rule_priority to rulePriority
+      rulePriority = 2
       description   = "Keep last 5 images for 'release-' tags"
       selection = {
-        tag_status      = "tagged"
-        tag_prefix_list = ["release-"]
-        count_type      = "imageCountMoreThan"
-        count_number    = 5
-        count_unit      = "image" # For 'imageCountMoreThan', count_unit must be 'image'
+        tagStatus     = "tagged" # Changed from tag_status to tagStatus
+        tagPrefixList = ["release-"] # Changed from tag_prefix_list to tagPrefixList
+        countType     = "imageCountMoreThan" # Changed from count_type to countType
+        countNumber   = 5 # Changed from count_number to countNumber
+        countUnit     = "image"
       }
       action = {
         type = "expire"
