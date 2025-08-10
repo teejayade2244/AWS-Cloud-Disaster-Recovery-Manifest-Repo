@@ -1,6 +1,3 @@
-# main.tf for the RDS module (./modules/aws-region-base/rds/)
-
-# Declare the required AWS provider for this module
 terraform {
   required_providers {
     aws = {
@@ -11,17 +8,15 @@ terraform {
 
 # Conditionally generate a random password if not explicitly provided
 resource "random_password" "db_master_password" {
-  count   = 1 # Always create this resource
-  length  = 16
-  special = true
-  min_special = 1 # Ensure at least one special character is used
-  # Explicitly define allowed special characters, excluding '/', '@', '"', and space.
-  # This list avoids characters known to cause issues with RDS master passwords.
-  override_special = "!#$%&()*+,-.:;<=>?[]^_{|}~"
-  numeric = true
-  upper   = true
-  lower   = true
+  length           = 16
+  special          = true
+  override_special = "!@#$%^&*"
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
 }
+
 
 # Determine the actual password to use: either the provided one or the randomly generated one
 locals {
