@@ -21,7 +21,7 @@ resource "aws_db_subnet_group" "default" {
 
   tags = {
     Environment = var.environment_tag
-    Region      = var.region
+    Region       = var.region
   }
 }
 
