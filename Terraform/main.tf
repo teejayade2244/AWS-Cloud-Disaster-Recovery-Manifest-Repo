@@ -70,7 +70,6 @@ locals {
 # Create EKS clusters
 module "primary_eks" {
   source = "./modules/aws-region-base/eks"
-
   region                = var.primary_region
   environment_tag       = "Production"
   vpc_id                = module.primary_networking.vpc_id
@@ -185,3 +184,9 @@ module "secondary_database" {
   ]
 }
 
+module "ecr_repos" {
+  source           = "./modules/aws-region-base/ecr" 
+  project_name     = "aura-flow-app"
+  environment_tag  = "Production"
+  repository_names = ["backend-app", "frontend-app"] 
+}

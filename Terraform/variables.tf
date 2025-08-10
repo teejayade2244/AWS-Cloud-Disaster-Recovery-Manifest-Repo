@@ -202,3 +202,10 @@ variable "secondary_db_multi_az" {
   description = "Specifies if the secondary DB instance is Multi-AZ."
   type        = bool
 }
+
+variable "project_name" {
+  description = "A unique name for your entire project. Used for naming resources."
+  type        = string
+  # No default here, as it's typically set per environment or via CI/CD
+}
+

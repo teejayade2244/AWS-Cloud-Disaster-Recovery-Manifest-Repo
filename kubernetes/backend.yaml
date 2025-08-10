@@ -1,0 +1,127 @@
+# create ns
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aura-flow-dev
+---
+# create service account for backend
+# This service account will be used by the backend to access AWS Secrets Manager
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aura-flow-backend-sa
+  namespace: aura-flow-dev
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::899411341244:role/backend-secrets-manager-role
+
+---
+# create backend configmap for CORS
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config 
+  namespace: aura-flow-dev
+  labels:
+    app: fastapi-backend
+data:
+  CORS_ALLOWED_ORIGINS: "http://YOUR_FRONTEND_ALB_DNS_NAME,http://localhost:3000"
+
+---
+# create backend deployment
+apiVersion: apps/v1
+kind: Deployment
+namespace: aura-flow-dev
+metadata:
+  name: fastapi-backend-deployment
+  labels:
+    app: fastapi-backend
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: fastapi-backend
+  template:
+    metadata:
+      labels:
+        app: fastapi-backend
+    spec:
+      serviceAccountName: aura-flow-backend-sa 
+      containers:
+      - name: fastapi-backend
+        image: teejay4125/backend:irsa-latest 
+        ports:
+        - containerPort: 8000 
+        envFrom:
+        - configMapRef:
+            name: backend-config
+        - secretRef:
+             name: backend-api
+        resources: 
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe: 
+          httpGet:
+            path: /health 
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe: 
+          httpGet:
+            path: /health 
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+---
+# create backend service
+apiVersion: v1
+kind: Service
+namespace: aura-flow-dev
+metadata:
+  name: fastapi-backend-service
+  labels:
+    app: fastapi-backend
+spec:
+  selector:
+    app: fastapi-backend 
+  ports:
+    - protocol: TCP
+      port: 80         
+      targetPort: 8000  
+  type: ClusterIP 
+
+---
+# create backend ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+namespace: aura-flow-dev
+metadata:
+  name: fastapi-backend-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb 
+    alb.ingress.kubernetes.io/scheme: internet-facing 
+    alb.ingress.kubernetes.io/target-type: ip 
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300 
+    # alb.ingress.kubernetes.io/subnets: 
+    #   "YOUR_PUBLIC_SUBNET_ID_1,YOUR_PUBLIC_SUBNET_ID_2"
+    alb.ingress.kubernetes.io/healthcheck-path: /health 
+    alb.ingress.kubernetes.io/healthcheck-port: "8000" 
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/backend-protocol: HTTP 
+  labels:
+    app: fastapi-backend
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: fastapi-backend-service
+            port:
+              number: 80
