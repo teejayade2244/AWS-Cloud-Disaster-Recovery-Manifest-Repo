@@ -60,3 +60,4 @@ variable "allowed_inbound_cidrs" {
   description = "List of CIDR blocks allowed to access the EKS cluster API endpoint (port 443)."
   type        = list(string)
 }
+

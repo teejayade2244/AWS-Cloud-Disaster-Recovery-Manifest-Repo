@@ -84,9 +84,10 @@ module "primary_eks" {
   node_group_min_size   = var.node_group_min_size
   allowed_inbound_cidrs = local.primary_eks_allowed_cidrs
 
-  providers = {
+   providers = {
     aws = aws.primary
     tls = tls.primary
+    aws.primary = aws.primary  # Add this line
   }
 
   depends_on = [
@@ -113,6 +114,7 @@ module "secondary_eks" {
   providers = {
     aws = aws.secondary
     tls = tls.secondary
+    aws.secondary = aws.secondary
   }
 
   depends_on = [
