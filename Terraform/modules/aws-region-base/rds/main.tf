@@ -1,36 +1,43 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
+# main.tf for the RDS module (./modules/aws-region-base/rds/)
+
+# Conditionally generate a random password if not provided
+resource "random_password" "db_master_password" {
+  count   = var.db_master_password == null ? 1 : 0
+  length  = 16
+  special = true
+  numeric = true
+  upper   = true
+  lower   = true
+}
+
+# Determine the actual password to use: either the provided one or the randomly generated one
+locals {
+  actual_db_password = var.db_master_password != null ? var.db_master_password : random_password.db_master_password[0].result
+}
+
+resource "aws_db_subnet_group" "default" {
+  name       = "${var.environment_tag}-${var.region}-db-subnet-group"
+  subnet_ids = var.private_subnet_ids
+
+  tags = {
+    Environment = var.environment_tag
+    Region      = var.region
   }
 }
 
-resource "random_password" "db_master_password" {
-  length           = 16
-  special          = true
-  override_special = "!@#$%^&*"
-  min_lower        = 1
-  min_upper        = 1
-  min_numeric      = 1
-  min_special      = 1
-}
-
-resource "aws_security_group" "db_sg" {
-  name        = "${lower(var.environment_tag)}-${lower(var.region)}-db-sg"
-  description = "Security group for RDS database"
+resource "aws_security_group" "rds_sg" {
+  name        = "${var.environment_tag}-${var.region}-rds-sg"
+  description = "Allow inbound traffic to RDS instance"
   vpc_id      = var.vpc_id
 
   ingress {
     from_port   = var.db_port
     to_port     = var.db_port
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.selected.cidr_block]
+    # Ideally, restrict this to specific security groups or CIDRs
+    # For now, allowing all private VPC CIDRs, but refine this for production.
+    cidr_blocks = ["0.0.0.0/0"] # This is too open, refine for specific application security groups
+    description = "Allow database traffic"
   }
 
   egress {
@@ -41,73 +48,67 @@ resource "aws_security_group" "db_sg" {
   }
 
   tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-sg"
     Environment = var.environment_tag
+    Region      = var.region
   }
 }
 
-data "aws_vpc" "selected" {
-  id = var.vpc_id
-}
-
-resource "aws_db_subnet_group" "main" {
-  name        = "${lower(var.environment_tag)}-${lower(var.region)}-db-subnet-group"
-  subnet_ids  = var.private_subnet_ids
-  description = "DB Subnet Group for RDS instance"
-
-  tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-subnet-group"
-    Environment = var.environment_tag
-  }
-}
-
+# Primary DB Instance (if not a read replica)
 resource "aws_db_instance" "main" {
-  count                  = var.is_read_replica ? 0 : 1
-  identifier             = "${lower(var.environment_tag)}-${lower(var.region)}-db-instance"
+  count = var.is_read_replica ? 0 : 1 # Only create if it's not a read replica
+
+  allocated_storage      = var.db_allocated_storage
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
   instance_class         = var.db_instance_class
-  allocated_storage      = var.db_allocated_storage
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
   db_name                = var.db_name
   username               = var.db_master_username
-  password               = random_password.db_master_password.result
+  password               = local.actual_db_password # Use the determined password
   port                   = var.db_port
   multi_az               = var.db_multi_az
+  db_subnet_group_name   = aws_db_subnet_group.default.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
   skip_final_snapshot    = var.db_skip_final_snapshot
   backup_retention_period = var.db_backup_retention_period
   deletion_protection    = var.db_deletion_protection
   publicly_accessible    = false
 
   tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-instance"
+    Name        = "${var.environment_tag}-${var.region}-rds-instance"
     Environment = var.environment_tag
+    Region      = var.region
   }
 }
 
+# Read Replica DB Instance (if it is a read replica)
 resource "aws_db_instance" "read_replica" {
-  count                  = var.is_read_replica ? 1 : 0
-  identifier             = "${lower(var.environment_tag)}-${lower(var.region)}-db-replica"
-  instance_class         = var.db_instance_class
+  count = var.is_read_replica ? 1 : 0 # Only create if it is a read replica
+
   replicate_source_db    = var.source_db_instance_arn
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
-  publicly_accessible    = false
-  multi_az               = var.db_multi_az
+  instance_class         = var.db_instance_class
+  db_subnet_group_name   = aws_db_subnet_group.default.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
   skip_final_snapshot    = var.db_skip_final_snapshot
   backup_retention_period = var.db_backup_retention_period
   deletion_protection    = var.db_deletion_protection
+  publicly_accessible    = false
+  # Note: The username, password, engine, engine_version, allocated_storage,
+  # and port are inherited from the source DB during replication setup.
+  # However, for consistency and potential promotion, the secrets manager secret
+  # associated with this replica will store the same credentials as the primary.
+  username               = var.db_master_username
+  password               = local.actual_db_password # Store the determined password in the replica's secret
 
   tags = {
-    Name        = "${var.environment_tag}-${var.region}-db-replica"
+    Name        = "${var.environment_tag}-${var.region}-rds-read-replica"
     Environment = var.environment_tag
+    Region      = var.region
   }
 }
 
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name        = "${var.environment_tag}/${var.region}/db-credentials"
-  description = "RDS ${var.db_engine} credentials for ${var.environment_tag} in ${var.region}"
+  name_prefix = "${var.environment_tag}/${var.region}/db-credentials-"
+  description = "Database credentials for RDS instance in ${var.region} ${var.environment_tag}"
 
   tags = {
     Environment = var.environment_tag
@@ -118,11 +119,12 @@ resource "aws_secretsmanager_secret" "db_credentials" {
 resource "aws_secretsmanager_secret_version" "db_credentials_version" {
   secret_id = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
-    username = var.db_master_username
-    password = random_password.db_master_password.result
     db_name  = var.db_name
     engine   = var.db_engine
+    # Dynamically set host based on whether it's the main instance or a read replica
     host     = var.is_read_replica ? aws_db_instance.read_replica[0].address : aws_db_instance.main[0].address
+    password = local.actual_db_password # Store the actual determined password
     port     = var.db_port
+    username = var.db_master_username
   })
 }

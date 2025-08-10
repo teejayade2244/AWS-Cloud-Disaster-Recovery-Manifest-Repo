@@ -1,5 +1,14 @@
 # main.tf - Infrastructure only
 
+# Generate a single master password at the root level to be shared across primary and replica
+resource "random_password" "shared_db_master_password" {
+  length  = 16
+  special = true
+  numeric = true
+  upper   = true
+  lower   = true
+}
+
 module "primary_networking" {
   source = "./modules/aws-region-base/networking"
   region              = var.primary_region
@@ -132,7 +141,8 @@ module "primary_database" {
   db_engine                = var.primary_db_engine
   db_engine_version        = var.primary_db_engine_version
   db_allocated_storage     = var.primary_db_allocated_storage
-  db_master_username       = var.primary_db_master_username # Master username for primary
+  db_master_username       = var.primary_db_master_username
+  db_master_password       = random_password.shared_db_master_password.result # Pass the shared password
   db_port                  = var.primary_db_port
   db_skip_final_snapshot   = var.primary_db_skip_final_snapshot
   db_backup_retention_period = var.primary_db_backup_retention_period
@@ -157,20 +167,19 @@ module "secondary_database" {
   vpc_id              = module.secondary_networking.vpc_id
   private_subnet_ids  = module.secondary_networking.private_subnet_ids
 
-  # These values will be inherited from the source DB for a read replica,
-  # but are still provided here for consistency or if promoted later.
   db_name                  = var.secondary_db_name
   db_instance_class        = var.secondary_db_instance_class
   db_engine                = var.secondary_db_engine
   db_engine_version        = var.secondary_db_engine_version
   db_allocated_storage     = var.secondary_db_allocated_storage
-  db_master_username       = var.primary_db_master_username # <--- CRITICAL CHANGE: Use primary username here
+  db_master_username       = var.primary_db_master_username # Use the primary username
+  db_master_password       = random_password.shared_db_master_password.result # Pass the shared password
   db_port                  = var.secondary_db_port
   db_skip_final_snapshot   = var.secondary_db_skip_final_snapshot
   db_backup_retention_period = var.secondary_db_backup_retention_period
   db_deletion_protection   = var.secondary_db_deletion_protection
   db_multi_az              = var.secondary_db_multi_az
-  # --- CRITICAL: Link to primary database for cross-region replication ---
+
   is_read_replica       = true
   source_db_instance_arn = module.primary_database.db_instance_arn
 

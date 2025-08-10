@@ -3,20 +3,20 @@
 output "db_instance_endpoint" {
   description = "The connection endpoint of the RDS instance."
   # Dynamically select endpoint based on which instance type is created
-  value       = var.source_db_instance_arn == null ? aws_db_instance.main[0].address : aws_db_instance.read_replica[0].address
+  value       = var.is_read_replica ? aws_db_instance.read_replica[0].address : aws_db_instance.main[0].address
 }
 
 output "db_instance_port" {
   description = "The port of the RDS instance."
   # Dynamically select port based on which instance type is created
-  value       = var.source_db_instance_arn == null ? aws_db_instance.main[0].port : aws_db_instance.read_replica[0].port
+  value       = var.is_read_replica ? aws_db_instance.read_replica[0].port : aws_db_instance.main[0].port
 }
 
 # New output for the instance ARN, needed for creating read replicas
 output "db_instance_arn" {
   description = "The ARN of the RDS instance."
   # Dynamically select ARN based on which instance type is created
-  value       = var.source_db_instance_arn == null ? aws_db_instance.main[0].arn : aws_db_instance.read_replica[0].arn
+  value       = var.is_read_replica ? aws_db_instance.read_replica[0].arn : aws_db_instance.main[0].arn
 }
 
 output "db_secret_arn" {
@@ -33,10 +33,11 @@ output "db_master_username" {
 
 output "db_master_password_sm" {
   description = "The master password stored in Secrets Manager (sensitive)."
-  value       = random_password.db_master_password.result
+  value       = local.actual_db_password # Referencing the local that holds the actual password
   sensitive   = true # Mark as sensitive to prevent display in CLI output
 }
 
 output "db_endpoint" {
+  description = "The full endpoint of the RDS instance, including port."
   value = var.is_read_replica ? aws_db_instance.read_replica[0].endpoint : aws_db_instance.main[0].endpoint
 }

@@ -174,10 +174,6 @@ variable "secondary_db_allocated_storage" {
 }
 
 # secondary_db_master_username is REMOVED as it will use primary_db_master_username
-# variable "secondary_db_master_username" {
-#   description = "The master username for the secondary region database."
-#   type        = string
-# }
 
 variable "secondary_db_port" {
   description = "The port on which the secondary database accepts connections."

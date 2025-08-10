@@ -16,6 +16,7 @@ secondary_private_subnet_cidrs = ["10.1.10.0/24", "10.1.11.0/24"]
 cluster_name_prefix   = "aura-flow-dev"
 kubernetes_version    = "1.32"
 node_instance_type    = "t2.medium"
+# Primary region will have 2 desired nodes
 node_group_desired_size = 2
 node_group_max_size   = 3
 node_group_min_size   = 1
@@ -39,12 +40,12 @@ secondary_db_instance_class      = "db.t3.micro"
 secondary_db_engine              = "postgres"
 secondary_db_engine_version      = "14.12"
 secondary_db_allocated_storage   = 20
+# secondary_db_master_username is REMOVED - it will implicitly use primary_db_master_username from main.tf
 secondary_db_port                = 5432
 secondary_db_skip_final_snapshot = true
 secondary_db_backup_retention_period = 1
 secondary_db_deletion_protection = false
 secondary_db_multi_az            = false
-# source_db_instance_arn = null # This line is commented out in your original, keep it.
 
 project_name    = "aura-flow"
-application_names = ["backend-api", "frontend-app"] 
+application_names = ["backend-api", "frontend-app"]
