@@ -256,65 +256,65 @@ data "aws_caller_identity" "current" {
   provider = aws
 }
 
-# data "aws_iam_policy_document" "backend_app_trust_policy" {
-#   statement {
-#     actions = ["sts:AssumeRoleWithWebIdentity"]
-#     principals {
-#       type        = "Federated"
-#       identifiers = [data.aws_iam_openid_connect_provider.primary_oidc.arn]
-#     }
-#     condition {
-#       test     = "StringEquals"
-#       variable = "${replace(data.aws_iam_openid_connect_provider.primary_oidc.url, "https://", "")}:sub"
-#       # Replace 'default' with your application's Kubernetes namespace if different
-#       # Replace 'aura-flow-backend-sa' with the desired name for your Kubernetes Service Account
-#       values   = ["system:serviceaccount:default:backend2"]
-#     }
-#   }
-# }
+data "aws_iam_policy_document" "backend_app_trust_policy" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [data.aws_iam_openid_connect_provider.primary_oidc.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(data.aws_iam_openid_connect_provider.primary_oidc.url, "https://", "")}:sub"
+      # Replace 'default' with your application's Kubernetes namespace if different
+      # Replace 'aura-flow-backend-sa' with the desired name for your Kubernetes Service Account
+      values   = ["system:serviceaccount:default:backend2"]
+    }
+  }
+}
 
-# # AWS IAM OpenID Connect Provider for EKS
-# data "aws_iam_openid_connect_provider" "primary_oidc" {
-#   provider = aws.primary
-#   url = data.aws_eks_cluster.primary_oidc.identity[0].oidc[0].issuer
-# }
+# AWS IAM OpenID Connect Provider for EKS
+data "aws_iam_openid_connect_provider" "primary_oidc" {
+  provider = aws.primary
+  url = data.aws_eks_cluster.primary_oidc.identity[0].oidc[0].issuer
+}
 
 
-# # IAM Role for the backend application
-# resource "aws_iam_role" "backend_secrets_manager_role" {
-#   provider           = aws.primary
-#   name               = "${var.cluster_name_prefix}-backend-secrets-manager-role"
-#   assume_role_policy = data.aws_iam_policy_document.backend_app_trust_policy.json
+# IAM Role for the backend application
+resource "aws_iam_role" "backend_secrets_manager_role" {
+  provider           = aws.primary
+  name               = "${var.cluster_name_prefix}-backend-secrets-manager-role"
+  assume_role_policy = data.aws_iam_policy_document.backend_app_trust_policy.json
 
-#   tags = {
-#     Environment = var.environment_tag
-#     Project     = var.project_name
-#   }
-# }
+  tags = {
+    Environment = var.environment_tag
+    Project     = var.project_name
+  }
+}
 
-# # IAM Policy to allow reading from the specific DB secret
-# data "aws_iam_policy_document" "backend_secrets_manager_policy_document" {
-#   statement {
-#     actions = [
-#       "secretsmanager:GetSecretValue",
-#       "secretsmanager:DescribeSecret" # Good to have for basic secret inspection
-#     ]
-#     resources = [
-#       module.primary_database.db_secret_arn # The ARN of your primary DB secret from Terraform output
-#     ]
-#     effect = "Allow"
-#   }
-# }
+# IAM Policy to allow reading from the specific DB secret
+data "aws_iam_policy_document" "backend_secrets_manager_policy_document" {
+  statement {
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret" # Good to have for basic secret inspection
+    ]
+    resources = [
+      module.primary_database.db_secret_arn # The ARN of your primary DB secret from Terraform output
+    ]
+    effect = "Allow"
+  }
+}
 
-# # Attach the policy to the role
-# resource "aws_iam_role_policy" "backend_secrets_manager_policy" {
-#   provider = aws.primary
-#   name     = "${var.cluster_name_prefix}-backend-secrets-manager-policy"
-#   role     = aws_iam_role.backend_secrets_manager_role.id
-#   policy   = data.aws_iam_policy_document.backend_secrets_manager_policy_document.json
-# }
+# Attach the policy to the role
+resource "aws_iam_role_policy" "backend_secrets_manager_policy" {
+  provider = aws.primary
+  name     = "${var.cluster_name_prefix}-backend-secrets-manager-policy"
+  role     = aws_iam_role.backend_secrets_manager_role.id
+  policy   = data.aws_iam_policy_document.backend_secrets_manager_policy_document.json
+}
 
-# data "aws_eks_cluster" "primary_oidc" {
-#   provider = aws.primary
-#   name     = module.primary_eks.cluster_name
-# }
+data "aws_eks_cluster" "primary_oidc" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
+}
