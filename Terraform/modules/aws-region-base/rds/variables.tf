@@ -51,10 +51,15 @@ variable "db_master_username" {
 }
 
 variable "db_master_password" {
-  description = "The master password for the database. If not provided, a random one will be generated."
   type        = string
-  default     = null # Make it optional
-  sensitive   = true # Mark as sensitive
+  default     = null
+  description = "Optional master password for the database"
+  sensitive   = true
+  
+  validation {
+    condition     = var.db_master_password == null ? true : can(regex("^[^/@\" ]+$", var.db_master_password))
+    error_message = "Database password cannot contain '/', '@', '\"', or spaces"
+  }
 }
 
 variable "db_port" {
