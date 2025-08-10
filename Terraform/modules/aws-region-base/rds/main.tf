@@ -1,6 +1,3 @@
-# main.tf for the RDS module (./modules/aws-region-base/rds/)
-
-# Declare the required AWS provider for this module
 terraform {
   required_providers {
     aws = {
@@ -15,7 +12,6 @@ data "aws_vpc" "current" {
 }
 
 resource "aws_db_subnet_group" "default" {
-  # Convert environment_tag to lowercase for valid AWS naming
   name       = "${lower(var.environment_tag)}-${var.region}-db-subnet-group"
   subnet_ids = var.private_subnet_ids
 
@@ -26,7 +22,6 @@ resource "aws_db_subnet_group" "default" {
 }
 
 resource "aws_security_group" "rds_sg" {
-  # Convert environment_tag to lowercase for valid AWS naming
   name        = "${lower(var.environment_tag)}-${var.region}-rds-sg"
   description = "Allow inbound traffic to RDS instance from within its VPC"
   vpc_id      = var.vpc_id
@@ -35,7 +30,6 @@ resource "aws_security_group" "rds_sg" {
     from_port   = var.db_port
     to_port     = var.db_port
     protocol    = "tcp"
-    # Allow traffic only from within the VPC's CIDR block
     cidr_blocks = [data.aws_vpc.current.cidr_block]
     description = "Allow database traffic from within VPC"
   }
@@ -55,17 +49,13 @@ resource "aws_security_group" "rds_sg" {
 
 # Primary DB Instance (if not a read replica)
 resource "aws_db_instance" "main" {
-  count = var.is_read_replica ? 0 : 1 # Only create if it's not a read replica
-
-  # Custom identifier for the DB instance
-  # Replaces underscores in db_name with hyphens for valid identifier
+  count = var.is_read_replica ? 0 : 1 
   identifier             = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}"
-  
   allocated_storage      = var.db_allocated_storage
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
   instance_class         = var.db_instance_class
-  db_name                = var.db_name # The actual database name inside the instance, can have underscores
+  db_name                = var.db_name
   username               = var.db_master_username
   password               = var.db_master_password
   port                   = var.db_port
@@ -76,11 +66,7 @@ resource "aws_db_instance" "main" {
   backup_retention_period = var.db_backup_retention_period
   deletion_protection    = var.db_deletion_protection
   publicly_accessible    = false
-
-  # REQUIRED when skip_final_snapshot is false
-  # Replaces underscores in db_name with hyphens for valid snapshot identifier
   final_snapshot_identifier = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}-final-snapshot"
-
   tags = {
     Name        = "${var.environment_tag}-${var.region}-rds-instance"
     Environment = var.environment_tag
@@ -90,10 +76,7 @@ resource "aws_db_instance" "main" {
 
 # Read Replica DB Instance (if it is a read replica)
 resource "aws_db_instance" "read_replica" {
-  count = var.is_read_replica ? 1 : 0 # Only create if it is a read replica
-
-  # Custom identifier for the read replica
-  # Replaces underscores in db_name with hyphens for valid identifier
+  count = var.is_read_replica ? 1 : 0 
   identifier             = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}-replica"
 
   replicate_source_db    = var.source_db_instance_arn
@@ -104,10 +87,6 @@ resource "aws_db_instance" "read_replica" {
   backup_retention_period = var.db_backup_retention_period
   deletion_protection    = var.db_deletion_protection
   publicly_accessible    = false
-  # username, password, engine, engine_version, allocated_storage, port are inherited from source DB.
-
-  # REQUIRED when skip_final_snapshot is false
-  # Replaces underscores in db_name with hyphens for valid snapshot identifier
   final_snapshot_identifier = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}-replica-final-snapshot"
 
   tags = {

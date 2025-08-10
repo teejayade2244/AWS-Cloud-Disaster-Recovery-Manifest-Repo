@@ -14,8 +14,8 @@ secondary_private_subnet_cidrs = ["10.1.10.0/24", "10.1.11.0/24"]
 
 # EKS Cluster
 cluster_name_prefix   = "aura-flow-dev"
-kubernetes_version    = "1.28"
-node_instance_type    = "t3.medium"
+kubernetes_version    = "1.32"
+node_instance_type    = "t2.medium"
 node_group_desired_size = 2
 node_group_max_size   = 3
 node_group_min_size   = 1
