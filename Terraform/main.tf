@@ -126,6 +126,11 @@ module "secondary_eks" {
     module.vpc_peering
   ]
 }
+
+data "aws_secretsmanager_secret_version" "db_master_password" {
+  secret_id = "production/eu-west-2/db-credentials-20250810202507717300000001" 
+}
+
 # Primary Database Module (Standalone/Source)
 module "primary_database" {
   source = "./modules/aws-region-base/rds"
@@ -144,7 +149,7 @@ module "primary_database" {
   db_engine_version        = var.primary_db_engine_version
   db_allocated_storage     = var.primary_db_allocated_storage
   db_master_username       = var.primary_db_master_username
-  db_master_password       = var.primary_db_master_password 
+  db_master_password       = data.aws_secretsmanager_secret_version.db_master_password.secret_string
   db_port                  = var.primary_db_port
   db_skip_final_snapshot   = var.primary_db_skip_final_snapshot
   db_backup_retention_period = var.primary_db_backup_retention_period
@@ -175,9 +180,8 @@ module "secondary_database" {
   db_engine                = var.secondary_db_engine
   db_engine_version        = var.secondary_db_engine_version
   db_allocated_storage     = var.secondary_db_allocated_storage
-  # REMOVED: db_master_username and db_master_password for replica as its secret won't be created here
-  db_master_username       = var.primary_db_master_username # Replica uses primary username
-  db_master_password       = var.primary_db_master_password # Replica uses primary password
+  db_master_username       = var.primary_db_master_username 
+  db_master_password       = data.aws_secretsmanager_secret_version.db_master_password.secret_string 
   db_port                  = var.secondary_db_port
   db_skip_final_snapshot   = var.secondary_db_skip_final_snapshot
   db_backup_retention_period = var.secondary_db_backup_retention_period
