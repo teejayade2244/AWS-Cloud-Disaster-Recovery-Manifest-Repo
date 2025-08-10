@@ -1,8 +1,18 @@
 # main.tf for the RDS module (./modules/aws-region-base/rds/)
 
-# Conditionally generate a random password if not provided
+# Declare the required AWS provider for this module
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+}
+
+# Conditionally generate a random password if not explicitly provided
+# By setting count = 1, this resource is always planned, resolving the "Invalid count argument" error.
 resource "random_password" "db_master_password" {
-  count   = var.db_master_password == null ? 1 : 0
+  count   = 1 # Always create this resource
   length  = 16
   special = true
   numeric = true
@@ -16,7 +26,8 @@ locals {
 }
 
 resource "aws_db_subnet_group" "default" {
-  name       = "${var.environment_tag}-${var.region}-db-subnet-group"
+  # Convert environment_tag to lowercase for valid AWS naming
+  name       = "${lower(var.environment_tag)}-${var.region}-db-subnet-group"
   subnet_ids = var.private_subnet_ids
 
   tags = {
@@ -26,7 +37,8 @@ resource "aws_db_subnet_group" "default" {
 }
 
 resource "aws_security_group" "rds_sg" {
-  name        = "${var.environment_tag}-${var.region}-rds-sg"
+  # Convert environment_tag to lowercase for valid AWS naming
+  name        = "${lower(var.environment_tag)}-${var.region}-rds-sg"
   description = "Allow inbound traffic to RDS instance"
   vpc_id      = var.vpc_id
 
@@ -107,7 +119,8 @@ resource "aws_db_instance" "read_replica" {
 }
 
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name_prefix = "${var.environment_tag}/${var.region}/db-credentials-"
+  # Convert environment_tag to lowercase for valid AWS naming
+  name_prefix = "${lower(var.environment_tag)}/${var.region}/db-credentials-"
   description = "Database credentials for RDS instance in ${var.region} ${var.environment_tag}"
 
   tags = {
