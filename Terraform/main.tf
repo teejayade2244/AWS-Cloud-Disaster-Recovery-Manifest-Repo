@@ -1,3 +1,13 @@
+resource "random_password" "shared_db_master_password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}|;:,.<>?"
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
+}
+
 module "primary_networking" {
   source = "./modules/aws-region-base/networking"
   region              = var.primary_region
