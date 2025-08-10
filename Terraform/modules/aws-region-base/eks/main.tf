@@ -313,3 +313,8 @@ resource "aws_iam_role_policy" "backend_secrets_manager_policy" {
   role     = aws_iam_role.backend_secrets_manager_role.id
   policy   = data.aws_iam_policy_document.backend_secrets_manager_policy_document.json
 }
+
+data "aws_eks_cluster" "primary_oidc" {
+  provider = aws.primary
+  name     = module.primary_eks.cluster_name
+}
