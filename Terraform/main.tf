@@ -89,7 +89,9 @@ module "primary_eks" {
     tls = tls.primary
   }
 
-  depends_on = [module.vpc_peering]
+  depends_on = [
+    module.vpc_peering
+  ]
 }
 
 module "secondary_eks" {
@@ -113,7 +115,39 @@ module "secondary_eks" {
     tls = tls.secondary
   }
 
-  depends_on = [module.vpc_peering]
+  depends_on = [
+    module.vpc_peering
+  ]
+}
+
+# --- Primary Database Module (Standalone/Source) ---
+module "primary_database" {
+  source = "./modules/aws-region-base/rds"
+  region              = var.primary_region
+  environment_tag     = "Production"
+  vpc_id              = module.primary_networking.vpc_id
+  private_subnet_ids  = module.primary_networking.private_subnet_ids
+
+  db_name                  = var.primary_db_name
+  db_instance_class        = var.primary_db_instance_class
+  db_engine                = var.primary_db_engine
+  db_engine_version        = var.primary_db_engine_version
+  db_allocated_storage     = var.primary_db_allocated_storage
+  db_master_username       = var.primary_db_master_username
+  db_port                  = var.primary_db_port
+  db_skip_final_snapshot   = var.primary_db_skip_final_snapshot
+  db_backup_retention_period = var.primary_db_backup_retention_period
+  db_deletion_protection   = var.primary_db_deletion_protection
+  db_multi_az              = var.primary_db_multi_az
+
+  is_read_replica       = false
+  source_db_instance_arn = null
+
+  providers = {
+    aws = aws.primary
+  }
+
+  depends_on = [module.primary_networking]
 }
 
 # --- Secondary Database Module (Cross-Region Read Replica) ---
