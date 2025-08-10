@@ -1,32 +1,27 @@
+# providers.tf
 terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0" 
+      version = "~> 5.0"
     }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.23" 
-    }
-    # helm = {
-    #   source = "hashicorp/helm"
-    #   version = "2.12.1" 
-    # }
-    tls = { # TLS provider is still needed for OIDC thumbprint
+    tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.0" # Use a compatible version
+      version = "~> 4.0"
     }
   }
 }
 
+# Primary region provider
 provider "aws" {
-  region = var.primary_region
   alias  = "primary"
+  region = var.primary_region
 }
 
+# Secondary region provider
 provider "aws" {
-  region = var.secondary_region
   alias  = "secondary"
+  region = var.secondary_region
 }
 
 provider "tls" {
@@ -36,5 +31,3 @@ provider "tls" {
 provider "tls" {
   alias = "secondary"
 }
-
-
