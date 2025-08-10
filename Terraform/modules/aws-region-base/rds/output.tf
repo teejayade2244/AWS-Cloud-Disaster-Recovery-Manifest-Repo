@@ -36,3 +36,11 @@ output "db_master_password_sm" {
   value       = random_password.db_master_password.result
   sensitive   = true # Mark as sensitive to prevent display in CLI output
 }
+
+output "db_instance_arn" {
+  value = var.is_read_replica ? aws_db_instance.read_replica[0].arn : aws_db_instance.main[0].arn
+}
+
+output "db_endpoint" {
+  value = var.is_read_replica ? aws_db_instance.read_replica[0].endpoint : aws_db_instance.main[0].endpoint
+}

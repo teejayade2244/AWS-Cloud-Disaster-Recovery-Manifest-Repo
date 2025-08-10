@@ -1,85 +1,90 @@
-# Variables for the Database Module
-
 variable "region" {
-  description = "The AWS region where the database will be deployed."
+  description = "AWS region"
   type        = string
 }
 
 variable "environment_tag" {
-  description = "Environment tag for resources (e.g., 'Production', 'DisasterRecovery')."
+  description = "Environment tag"
   type        = string
 }
 
 variable "vpc_id" {
-  description = "The ID of the VPC where the database will be deployed."
+  description = "VPC ID"
   type        = string
 }
 
 variable "private_subnet_ids" {
-  description = "A list of private subnet IDs for the database."
+  description = "List of private subnet IDs"
   type        = list(string)
 }
 
 variable "db_name" {
-  description = "The name of the database to create."
+  description = "Database name"
   type        = string
-  # db_name, username, password, engine, engine_version are inherited from source if it's a read replica.
-  # They are still needed for a standalone instance.
 }
 
 variable "db_instance_class" {
-  description = "The instance type of the database (e.g., db.t3.micro)."
+  description = "DB instance class"
   type        = string
 }
 
 variable "db_engine" {
-  description = "The database engine to use (e.g., postgres, mysql)."
+  description = "Database engine"
   type        = string
 }
 
 variable "db_engine_version" {
-  description = "The version of the database engine."
+  description = "Database engine version"
   type        = string
 }
 
 variable "db_allocated_storage" {
-  description = "The allocated storage in GB."
+  description = "Allocated storage in GB"
   type        = number
 }
 
 variable "db_master_username" {
-  description = "The master username for the database."
+  description = "Master username"
   type        = string
 }
 
 variable "db_port" {
-  description = "The port on which the database accepts connections."
+  description = "Database port"
   type        = number
 }
 
 variable "db_skip_final_snapshot" {
-  description = "Set to true to skip the final DB snapshot when deleting the DB instance."
+  description = "Skip final snapshot"
   type        = bool
+  default     = false
 }
 
 variable "db_backup_retention_period" {
-  description = "The days to retain backups. Must be between 0 and 35."
+  description = "Backup retention period in days"
   type        = number
+  default     = 7
 }
 
 variable "db_deletion_protection" {
-  description = "Set to true to enable deletion protection for the DB instance."
+  description = "Enable deletion protection"
   type        = bool
+  default     = true
 }
 
 variable "db_multi_az" {
-  description = "Specifies if the DB instance is Multi-AZ."
+  description = "Enable Multi-AZ"
   type        = bool
+  default     = false
 }
 
-# New variable for cross-region read replica configuration
 variable "source_db_instance_arn" {
-  description = "The ARN of the source DB instance if creating a read replica. Set to null for a standalone instance."
+  description = "Source DB ARN for replicas"
   type        = string
-  default     = null # Default to null for a standalone instance
+  default     = null
+}
+
+variable "is_read_replica" {
+  description = "Is this a read replica"
+  type        = bool
+  default     = false
 }

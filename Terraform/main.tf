@@ -140,7 +140,8 @@ module "primary_database" {
   db_deletion_protection   = var.primary_db_deletion_protection
   db_multi_az              = var.primary_db_multi_az
 
-  source_db_instance_arn = null 
+  is_read_replica       = false
+  source_db_instance_arn = null
 
   providers = {
     aws = aws.primary
@@ -171,6 +172,7 @@ module "secondary_database" {
   db_deletion_protection   = var.secondary_db_deletion_protection
   db_multi_az              = var.secondary_db_multi_az
   # --- CRITICAL: Link to primary database for cross-region replication ---
+  is_read_replica       = true
   source_db_instance_arn = module.primary_database.db_instance_arn
 
   providers = {
