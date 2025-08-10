@@ -1,7 +1,7 @@
 # main.tf - Infrastructure only
 
 module "primary_networking" {
-  source = "./modules/aws-region-base/networking" 
+  source = "./modules/aws-region-base/networking"
   region              = var.primary_region
   vpc_cidr            = var.primary_vpc_cidr
   public_subnet_cidrs = var.primary_public_subnet_cidrs
@@ -13,7 +13,7 @@ module "primary_networking" {
 }
 
 module "secondary_networking" {
-  source = "./modules/aws-region-base/networking" 
+  source = "./modules/aws-region-base/networking"
   region              = var.secondary_region
   vpc_cidr            = var.secondary_vpc_cidr
   public_subnet_cidrs = var.secondary_public_subnet_cidrs
@@ -56,14 +56,14 @@ module "vpc_peering" {
 locals {
   terraform_server_private_ip_cidr = "10.0.2.111/32"
   primary_eks_allowed_cidrs = [
-    var.primary_vpc_cidr,          
-    var.secondary_vpc_cidr,        
-    local.terraform_server_private_ip_cidr 
+    var.primary_vpc_cidr,
+    var.secondary_vpc_cidr,
+    local.terraform_server_private_ip_cidr
   ]
   secondary_eks_allowed_cidrs = [
-    var.secondary_vpc_cidr,       
-    var.primary_vpc_cidr,         
-    local.terraform_server_private_ip_cidr 
+    var.secondary_vpc_cidr,
+    var.primary_vpc_cidr,
+    local.terraform_server_private_ip_cidr
   ]
 }
 
@@ -78,7 +78,7 @@ module "primary_eks" {
   cluster_name          = "${var.cluster_name_prefix}-${var.primary_region}"
   kubernetes_version    = var.kubernetes_version
   node_instance_type    = var.node_instance_type
-  node_group_desired_size = var.node_group_desired_size 
+  node_group_desired_size = var.node_group_desired_size
   node_group_max_size   = var.node_group_max_size
   node_group_min_size   = var.node_group_min_size
   allowed_inbound_cidrs = local.primary_eks_allowed_cidrs
@@ -132,7 +132,7 @@ module "primary_database" {
   db_engine                = var.primary_db_engine
   db_engine_version        = var.primary_db_engine_version
   db_allocated_storage     = var.primary_db_allocated_storage
-  db_master_username       = var.primary_db_master_username
+  db_master_username       = var.primary_db_master_username # Master username for primary
   db_port                  = var.primary_db_port
   db_skip_final_snapshot   = var.primary_db_skip_final_snapshot
   db_backup_retention_period = var.primary_db_backup_retention_period
@@ -164,7 +164,7 @@ module "secondary_database" {
   db_engine                = var.secondary_db_engine
   db_engine_version        = var.secondary_db_engine_version
   db_allocated_storage     = var.secondary_db_allocated_storage
-  db_master_username       = var.secondary_db_master_username
+  db_master_username       = var.primary_db_master_username # <--- CRITICAL CHANGE: Use primary username here
   db_port                  = var.secondary_db_port
   db_skip_final_snapshot   = var.secondary_db_skip_final_snapshot
   db_backup_retention_period = var.secondary_db_backup_retention_period
@@ -188,13 +188,13 @@ module "primary_ecr_repos" {
   source = "./modules/aws-region-base/ecr"
   project_name    = var.project_name
   environment_tag = "Production"
-  region_suffix   = var.primary_region 
+  region_suffix   = var.primary_region
   application_names = var.application_names
   image_tag_mutability = "IMMUTABLE"
   scan_on_push         = true
 
   providers = {
-    aws = aws.primary 
+    aws = aws.primary
   }
 }
 
@@ -203,10 +203,10 @@ module "secondary_ecr_repos" {
   source = "./modules/aws-region-base/ecr"
   project_name    = var.project_name
   environment_tag = "DisasterRecovery"
-  region_suffix   = var.secondary_region 
+  region_suffix   = var.secondary_region
   application_names = var.application_names
 
   providers = {
-    aws = aws.secondary 
+    aws = aws.secondary
   }
 }

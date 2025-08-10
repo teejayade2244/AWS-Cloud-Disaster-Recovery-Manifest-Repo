@@ -117,7 +117,7 @@ variable "primary_db_allocated_storage" {
   type        = number
 }
 
-variable "primary_db_master_username" {
+variable "primary_db_master_username" { # This will be the single source of truth for username
   description = "The master username for the primary region database."
   type        = string
 }
@@ -147,9 +147,9 @@ variable "primary_db_multi_az" {
   type        = bool
 }
 
-# --- Database Variables for Secondary Region ---
+# --- Database Variables for Secondary Region (mostly for read replica configuration) ---
 variable "secondary_db_name" {
-  description = "The name of the database for the secondary region."
+  description = "The name of the database for the secondary region (read replica)."
   type        = string
 }
 
@@ -159,24 +159,25 @@ variable "secondary_db_instance_class" {
 }
 
 variable "secondary_db_engine" {
-  description = "The database engine to use for the secondary region (e.g., postgres, mysql)."
+  description = "The database engine to use for the secondary region (read replica)."
   type        = string
 }
 
 variable "secondary_db_engine_version" {
-  description = "The version of the database engine for the secondary region."
+  description = "The version of the database engine for the secondary region (read replica)."
   type        = string
 }
 
 variable "secondary_db_allocated_storage" {
-  description = "The allocated storage in GB for the secondary region database."
+  description = "The allocated storage in GB for the secondary region database (read replica)."
   type        = number
 }
 
-variable "secondary_db_master_username" {
-  description = "The master username for the secondary region database."
-  type        = string
-}
+# secondary_db_master_username is REMOVED as it will use primary_db_master_username
+# variable "secondary_db_master_username" {
+#   description = "The master username for the secondary region database."
+#   type        = string
+# }
 
 variable "secondary_db_port" {
   description = "The port on which the secondary database accepts connections."
