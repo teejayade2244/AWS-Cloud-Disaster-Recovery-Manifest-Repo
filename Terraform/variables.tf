@@ -211,8 +211,8 @@ variable "application_names" {
   type        = list(string)
 }
 
-variable "primary_db_master_password" {
-  description = "The master password for the primary region database. Must be printable ASCII characters, excluding /, @, \", and space."
-  type        = string
-  sensitive   = true # Mark as sensitive to prevent showing in plan output
-}
+# variable "primary_db_master_password" {
+#   description = "The master password for the primary region database. Must be printable ASCII characters, excluding /, @, \", and space."
+#   type        = string
+#   sensitive   = true # Mark as sensitive to prevent showing in plan output
+# }
