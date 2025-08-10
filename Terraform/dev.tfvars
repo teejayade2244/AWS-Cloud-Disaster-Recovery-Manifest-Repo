@@ -1,9 +1,7 @@
 # --- Development Environment Variables ---
-
 # Global Regions
 primary_region   = "eu-west-2" # London
 secondary_region = "us-east-1" # N. Virginia
-
 # Primary Region (eu-west-2) Networking
 primary_vpc_cidr            = "10.0.0.0/16"
 primary_public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
@@ -49,3 +47,5 @@ secondary_db_backup_retention_period = 1
 secondary_db_deletion_protection = false 
 secondary_db_multi_az            = false 
 # source_db_instance_arn = null
+
+project_name    = "aura-flow"

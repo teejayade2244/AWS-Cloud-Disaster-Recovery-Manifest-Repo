@@ -184,9 +184,31 @@ module "secondary_database" {
   ]
 }
 
-module "ecr_repos" {
-  source           = "./modules/aws-region-base/ecr" 
-  project_name     = "aura-flow-app"
-  environment_tag  = "Production"
-  repository_names = ["backend-app", "frontend-app"] 
+module "primary_ecr_repos" {
+  source = "./modules/ecr" # Path to your ECR module
+
+  # Pass variables from root to the module
+  project_name    = var.project_name
+  environment_tag = var.environment_tag
+  region_suffix   = var.primary_region 
+  application_names = var.application_names
+  # image_tag_mutability = "IMMUTABLE"
+  # scan_on_push         = true
+
+  providers = {
+    aws = aws.primary # Explicitly use the primary region provider
+  }
+}
+
+# Call the ECR module for the secondary (DR) region
+module "secondary_ecr_repos" {
+  source = "./modules/aws-region-base/ecr"
+  project_name    = var.project_name
+  environment_tag = "DisasterRecovery"
+  region_suffix   = var.secondary_region 
+  application_names = var.application_names
+
+  providers = {
+    aws = aws.secondary 
+  }
 }

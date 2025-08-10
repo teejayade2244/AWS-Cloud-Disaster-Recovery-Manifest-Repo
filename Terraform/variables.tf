@@ -209,3 +209,7 @@ variable "project_name" {
   # No default here, as it's typically set per environment or via CI/CD
 }
 
+variable "application_names" {
+  description = "A list of application names for which ECR repositories should be created."
+  type        = list(string)
+}
