@@ -13,17 +13,6 @@ data "aws_vpc" "current" {
 
 data "aws_caller_identity" "current" {}
 
-resource "random_password" "db_master_password" {
-  count            = var.db_master_password != null ? 0 : 1 
-  length           = 16
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}|;:,.<>?"
-  min_lower        = 1
-  min_upper        = 1
-  min_numeric      = 1
-  min_special      = 1
-}
-
 locals {
   actual_db_password = var.db_master_password != null ? var.db_master_password : random_password.db_master_password[0].result
 }
