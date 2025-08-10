@@ -1,3 +1,6 @@
+# main.tf for the RDS module (./modules/aws-region-base/rds/)
+
+# Declare the required AWS provider for this module
 terraform {
   required_providers {
     aws = {
@@ -6,22 +9,29 @@ terraform {
   }
 }
 
+# Conditionally generate a random password if not explicitly provided
 resource "random_password" "db_master_password" {
-  length           = 16
-  special          = true
-  override_special = "!@#$%^&*"
-  min_lower        = 1
-  min_upper        = 1
-  min_numeric      = 1
-  min_special      = 1
+  count   = 1 # Always create this resource
+  length  = 16
+  special = true
+  numeric = true
+  upper   = true
+  lower   = true
 }
 
 # Determine the actual password to use: either the provided one or the randomly generated one
 locals {
-  actual_db_password = var.db_master_password != null ? var.db_master_password : random_password.db_master_password[0].result
+  # Referencing random_password.db_master_password directly, without the [0] index.
+  actual_db_password = var.db_master_password != null ? var.db_master_password : random_password.db_master_password.result
 }
 
-resource "aws_db_subnet_group" "main" {
+# Data source to get information about the VPC using the provided vpc_id
+data "aws_vpc" "current" {
+  id = var.vpc_id
+}
+
+resource "aws_db_subnet_group" "default" {
+  # Convert environment_tag to lowercase for valid AWS naming
   name       = "${lower(var.environment_tag)}-${var.region}-db-subnet-group"
   subnet_ids = var.private_subnet_ids
 
@@ -32,16 +42,18 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_security_group" "rds_sg" {
+  # Convert environment_tag to lowercase for valid AWS naming
   name        = "${lower(var.environment_tag)}-${var.region}-rds-sg"
-  description = "Allow inbound traffic to RDS instance"
+  description = "Allow inbound traffic to RDS instance from within its VPC"
   vpc_id      = var.vpc_id
 
   ingress {
     from_port   = var.db_port
     to_port     = var.db_port
     protocol    = "tcp"
-     cidr_blocks = [data.aws_vpc.selected.cidr_block]
-    description = "Allow database traffic"
+    # Allow traffic only from within the VPC's CIDR block
+    cidr_blocks = [data.aws_vpc.current.cidr_block]
+    description = "Allow database traffic from within VPC"
   }
 
   egress {
@@ -59,7 +71,8 @@ resource "aws_security_group" "rds_sg" {
 
 # Primary DB Instance (if not a read replica)
 resource "aws_db_instance" "main" {
-  count = var.is_read_replica ? 0 : 1 
+  count = var.is_read_replica ? 0 : 1 # Only create if it's not a read replica
+
   allocated_storage      = var.db_allocated_storage
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
@@ -85,7 +98,8 @@ resource "aws_db_instance" "main" {
 
 # Read Replica DB Instance (if it is a read replica)
 resource "aws_db_instance" "read_replica" {
-  count = var.is_read_replica ? 1 : 0 
+  count = var.is_read_replica ? 1 : 0 # Only create if it is a read replica
+
   replicate_source_db    = var.source_db_instance_arn
   instance_class         = var.db_instance_class
   db_subnet_group_name   = aws_db_subnet_group.default.name
@@ -94,6 +108,9 @@ resource "aws_db_instance" "read_replica" {
   backup_retention_period = var.db_backup_retention_period
   deletion_protection    = var.db_deletion_protection
   publicly_accessible    = false
+  # REMOVED: username, password, engine, engine_version, allocated_storage, port
+  # These are inherited from the source DB instance when replicate_source_db is used.
+
   tags = {
     Name        = "${var.environment_tag}-${var.region}-rds-read-replica"
     Environment = var.environment_tag
