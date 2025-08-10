@@ -10,17 +10,6 @@ terraform {
     }
   }
 }
-
-provider "aws" {
-  alias  = "primary"
-  region = var.primary_region
-}
-
-provider "aws" {
-  alias  = "secondary"
-  region = var.secondary_region
-}
-
 # Generate a secure password that meets RDS requirements
 resource "random_password" "shared_db_master_password" {
   length           = 16
