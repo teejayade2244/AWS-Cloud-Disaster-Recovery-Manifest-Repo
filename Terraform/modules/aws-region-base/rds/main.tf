@@ -122,7 +122,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
     password = random_password.db_master_password.result
     db_name  = var.db_name
     engine   = var.db_engine
-    host     = var.is_read_replica ? aws_db_instance.read_replica[0].endpoint : aws_db_instance.main[0].endpoint
+    host     = var.is_read_replica ? aws_db_instance.read_replica[0].address : aws_db_instance.main[0].address
     port     = var.db_port
   })
 }
