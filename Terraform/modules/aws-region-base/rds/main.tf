@@ -57,16 +57,17 @@ resource "aws_security_group" "rds_sg" {
 resource "aws_db_instance" "main" {
   count = var.is_read_replica ? 0 : 1 # Only create if it's not a read replica
 
-  # Custom identifier for the DB instance (as discussed earlier)
-  identifier             = "${lower(var.environment_tag)}-${var.region}-${var.db_name}"
+  # Custom identifier for the DB instance
+  # Replaces underscores in db_name with hyphens for valid identifier
+  identifier             = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}"
   
   allocated_storage      = var.db_allocated_storage
   engine                 = var.db_engine
   engine_version         = var.db_engine_version
   instance_class         = var.db_instance_class
-  db_name                = var.db_name
+  db_name                = var.db_name # The actual database name inside the instance, can have underscores
   username               = var.db_master_username
-  password               = var.db_master_password # Directly use the provided password variable
+  password               = var.db_master_password
   port                   = var.db_port
   multi_az               = var.db_multi_az
   db_subnet_group_name   = aws_db_subnet_group.default.name
@@ -77,7 +78,8 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false
 
   # REQUIRED when skip_final_snapshot is false
-  final_snapshot_identifier = "${lower(var.environment_tag)}-${var.region}-${var.db_name}-final-snapshot"
+  # Replaces underscores in db_name with hyphens for valid snapshot identifier
+  final_snapshot_identifier = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}-final-snapshot"
 
   tags = {
     Name        = "${var.environment_tag}-${var.region}-rds-instance"
@@ -90,8 +92,9 @@ resource "aws_db_instance" "main" {
 resource "aws_db_instance" "read_replica" {
   count = var.is_read_replica ? 1 : 0 # Only create if it is a read replica
 
-  # Custom identifier for the read replica (as discussed earlier)
-  identifier             = "${lower(var.environment_tag)}-${var.region}-${var.db_name}-replica"
+  # Custom identifier for the read replica
+  # Replaces underscores in db_name with hyphens for valid identifier
+  identifier             = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}-replica"
 
   replicate_source_db    = var.source_db_instance_arn
   instance_class         = var.db_instance_class
@@ -104,8 +107,8 @@ resource "aws_db_instance" "read_replica" {
   # username, password, engine, engine_version, allocated_storage, port are inherited from source DB.
 
   # REQUIRED when skip_final_snapshot is false
-  final_snapshot_identifier = "${lower(var.environment_tag)}-${var.region}-${var.db_name}-replica-final-snapshot"
-
+  # Replaces underscores in db_name with hyphens for valid snapshot identifier
+  final_snapshot_identifier = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}-replica-final-snapshot"
 
   tags = {
     Name        = "${var.environment_tag}-${var.region}-rds-read-replica"
@@ -132,7 +135,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
     engine   = var.db_engine
     # Dynamically set host based on whether it's the main instance or a read replica
     host     = var.is_read_replica ? aws_db_instance.read_replica[0].address : aws_db_instance.main[0].address
-    password = var.db_master_password # Store the explicitly provided password
+    password = var.db_master_password
     port     = var.db_port
     username = var.db_master_username
   })
