@@ -1,3 +1,18 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+data "aws_vpc" "current" {
+  id = var.vpc_id
+}
+
+data "aws_caller_identity" "current" {}
+
 resource "random_password" "db_master_password" {
   count            = var.db_master_password != null ? 0 : 1 
   length           = 16
