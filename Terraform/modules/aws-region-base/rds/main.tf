@@ -14,6 +14,10 @@ resource "random_password" "db_master_password" {
   count   = 1 # Always create this resource
   length  = 16
   special = true
+  min_special = 1 # Ensure at least one special character is used
+  # Explicitly define allowed special characters, excluding '/', '@', '"', and space.
+  # This list avoids characters known to cause issues with RDS master passwords.
+  override_special = "!#$%&()*+,-.:;<=>?[]^_{|}~"
   numeric = true
   upper   = true
   lower   = true
