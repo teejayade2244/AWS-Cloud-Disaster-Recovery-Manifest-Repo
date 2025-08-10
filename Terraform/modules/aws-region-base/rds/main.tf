@@ -7,18 +7,16 @@ terraform {
 }
 
 # Conditionally generate a random password if not explicitly provided
-resource "random_password" "db_master_password" {
-  count            = var.db_master_password != null ? 0 : 1 
+resource "random_password" "shared_db_master_password" {
   length           = 16
   special          = true
-  # Explicitly list allowed special characters (excluding /, @, ", and space)
-  override_special = "!#$%&*()-_=+[]{}|;:,.<>?"
+  # Explicitly specify ALLOWED special characters (excluding /, @, ", and space)
+  override_special = "!#$%&*()-_=+[]{}|;:,.<>?'"
   min_lower        = 1
   min_upper        = 1
   min_numeric      = 1
   min_special      = 1
 }
-
 
 # Determine the actual password to use: either the provided one or the randomly generated one
 locals {
