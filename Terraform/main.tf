@@ -185,11 +185,11 @@ module "secondary_database" {
 }
 
 module "primary_ecr_repos" {
-  source = "./modules/ecr" # Path to your ECR module
+  source = "./modules/aws-region-base/ecr"
 
   # Pass variables from root to the module
   project_name    = var.project_name
-  environment_tag = var.environment_tag
+  environment_tag = "Production"
   region_suffix   = var.primary_region 
   application_names = var.application_names
   # image_tag_mutability = "IMMUTABLE"
