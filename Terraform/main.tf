@@ -186,17 +186,15 @@ module "secondary_database" {
 
 module "primary_ecr_repos" {
   source = "./modules/aws-region-base/ecr"
-
-  # Pass variables from root to the module
   project_name    = var.project_name
   environment_tag = "Production"
   region_suffix   = var.primary_region 
   application_names = var.application_names
-  # image_tag_mutability = "IMMUTABLE"
-  # scan_on_push         = true
+  image_tag_mutability = "IMMUTABLE"
+  scan_on_push         = true
 
   providers = {
-    aws = aws.primary # Explicitly use the primary region provider
+    aws = aws.primary 
   }
 }
 

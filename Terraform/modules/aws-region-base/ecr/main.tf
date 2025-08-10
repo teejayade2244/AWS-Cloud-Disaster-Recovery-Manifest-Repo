@@ -27,7 +27,35 @@ resource "aws_ecr_repository" "app_repo" {
 resource "aws_ecr_lifecycle_policy" "app_repo_policy" {
   for_each = aws_ecr_repository.app_repo 
   repository = each.value.name 
+  
   policy = jsonencode({
-    rules = var.lifecycle_policy_rules 
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Delete untagged images after 7 days"
+        selection = {
+          tagStatus     = "untagged"
+          countType     = "sinceImagePushed"
+          countNumber   = 7
+          countUnit     = "days"
+        }
+        action = {
+          type = "expire"
+        }
+      },
+      {
+        rulePriority = 2
+        description  = "Keep last 5 images for 'release-' tags"
+        selection = {
+          tagStatus     = "tagged"
+          tagPrefixList = ["release-"]
+          countType     = "imageCountMoreThan"
+          countNumber   = 5
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
   })
 }
