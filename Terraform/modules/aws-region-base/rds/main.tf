@@ -8,7 +8,7 @@ terraform {
 
 # Conditionally generate a random password if not explicitly provided
 resource "random_password" "db_master_password" {
-  count            = var.db_master_password != null ? 0 : 1 
+  count            = 1
   length           = 16
   special          = true
   # Updated to exclude characters not allowed by RDS: / @ " and spaces
