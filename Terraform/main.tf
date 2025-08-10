@@ -129,6 +129,7 @@ module "secondary_eks" {
 
 data "aws_secretsmanager_secret_version" "db_master_password" {
   secret_id = "production/eu-west-2/db-credentials-20250810202507717300000001" 
+  provider  = aws.primary 
 }
 
 # Primary Database Module (Standalone/Source)
