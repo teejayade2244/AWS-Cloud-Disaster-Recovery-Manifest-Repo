@@ -1,5 +1,3 @@
-# variables.tf for the RDS module (./modules/aws-region-base/rds/)
-
 variable "region" {
   description = "The AWS region where the RDS instance will be deployed."
   type        = string
@@ -95,6 +93,12 @@ variable "is_read_replica" {
 
 variable "source_db_instance_arn" {
   description = "The ARN of the source DB instance for a read replica."
+  type        = string
+  default     = null
+}
+
+variable "replica_region" {
+  description = "The region to replicate the secret to (only used for primary DB)"
   type        = string
   default     = null
 }
