@@ -31,11 +31,11 @@ output "db_master_username" {
                       # In production, avoid outputting sensitive data.
 }
 
-output "db_master_password_sm" {
-  description = "The master password stored in Secrets Manager (sensitive)."
-  value       = local.actual_db_password # Referencing the local that holds the actual password
-  sensitive   = true # Mark as sensitive to prevent display in CLI output
-}
+# output "db_master_password_sm" {
+#   description = "The master password stored in Secrets Manager (sensitive)."
+#   value       = local.actual_db_password # Referencing the local that holds the actual password
+#   sensitive   = true # Mark as sensitive to prevent display in CLI output
+# }
 
 output "db_endpoint" {
   description = "The full endpoint of the RDS instance, including port."
