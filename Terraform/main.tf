@@ -84,9 +84,11 @@ module "primary_eks" {
   node_group_min_size   = var.node_group_min_size
   allowed_inbound_cidrs = local.primary_eks_allowed_cidrs
 
-  providers = {
-    aws = aws.primary
-    tls = tls.primary
+    providers = {
+    aws.primary     = aws.primary
+    aws.secondary   = aws.secondary
+    tls.primary     = tls.primary
+    tls.secondary   = tls.secondary
   }
 
   depends_on = [
@@ -111,9 +113,12 @@ module "secondary_eks" {
   allowed_inbound_cidrs = local.secondary_eks_allowed_cidrs
 
   providers = {
-    aws = aws.secondary
-    tls = tls.secondary
+    aws.primary     = aws.primary
+    aws.secondary   = aws.secondary
+    tls.primary     = tls.primary
+    tls.secondary   = tls.secondary
   }
+
 
   depends_on = [
     module.vpc_peering
