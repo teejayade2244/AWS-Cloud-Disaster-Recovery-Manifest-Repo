@@ -21,8 +21,8 @@ resource "random_password" "db_master_password" {
 
 # Determine the actual password to use: either the provided one or the randomly generated one
 locals {
-  # Referencing random_password.db_master_password directly, without the [0] index.
-  actual_db_password = var.db_master_password != null ? var.db_master_password : random_password.db_master_password.result
+  # We need to use [0] because 'count' is set, even if count = 1.
+  actual_db_password = var.db_master_password != null ? var.db_master_password : random_password.db_master_password[0].result
 }
 
 # Data source to get information about the VPC using the provided vpc_id
