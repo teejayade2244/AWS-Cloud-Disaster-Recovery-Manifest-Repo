@@ -23,7 +23,7 @@ variable "application_names" {
 variable "image_tag_mutability" {
   description = "The tag mutability setting for the repository. Valid values are: MUTABLE or IMMUTABLE."
   type        = string
-  default     = "IMMUTABLE" 
+  default     = "IMMUTABLE" # Good practice for production to prevent accidental tag overwrites
 }
 
 variable "scan_on_push" {
@@ -35,7 +35,7 @@ variable "scan_on_push" {
 variable "lifecycle_policy_rules" {
   description = "A list of map objects defining lifecycle policy rules for the repository."
   type = list(object({
-    rule_priority : number
+    rulePriority : number # Changed from rule_priority to rulePriority
     description   : string
     selection     : object({
       tag_status : string
@@ -50,11 +50,11 @@ variable "lifecycle_policy_rules" {
   }))
   default = [
     {
-      rule_priority = 1
+      rulePriority = 1 # Changed from rule_priority to rulePriority
       description   = "Delete untagged images after 7 days"
       selection = {
         tag_status      = "untagged"
-        tag_prefix_list = [] 
+        tag_prefix_list = [] # No specific prefix
         count_type      = "sinceImagePushed"
         count_number    = 7
         count_unit      = "days"
@@ -64,14 +64,14 @@ variable "lifecycle_policy_rules" {
       }
     },
     {
-      rule_priority = 2
+      rulePriority = 2 # Changed from rule_priority to rulePriority
       description   = "Keep last 5 images for 'release-' tags"
       selection = {
         tag_status      = "tagged"
         tag_prefix_list = ["release-"]
         count_type      = "imageCountMoreThan"
         count_number    = 5
-        count_unit      = "image" 
+        count_unit      = "image" # For 'imageCountMoreThan', count_unit must be 'image'
       }
       action = {
         type = "expire"
