@@ -49,3 +49,4 @@ secondary_db_multi_az            = false
 # source_db_instance_arn = null
 
 project_name    = "aura-flow"
+ application_names = ["backend-api", "frontend-app"]
