@@ -7,16 +7,18 @@ terraform {
 }
 
 # Conditionally generate a random password if not explicitly provided
-resource "random_password" "shared_db_master_password" {
+resource "random_password" "db_master_password" {
+  count            = var.db_master_password != null ? 0 : 1 
   length           = 16
   special          = true
-  # Explicitly specify ALLOWED special characters (excluding /, @, ", and space)
-  override_special = "!#$%&*()-_=+[]{}|;:,.<>?'"
+  # Use only safe special characters that are definitely allowed by RDS
+  override_special = "!#$%^&*()_+-={}|:;<>?"
   min_lower        = 1
   min_upper        = 1
   min_numeric      = 1
   min_special      = 1
 }
+
 
 # Determine the actual password to use: either the provided one or the randomly generated one
 locals {
@@ -70,7 +72,7 @@ resource "aws_security_group" "rds_sg" {
 
 # Primary DB Instance (if not a read replica)
 resource "aws_db_instance" "main" {
-  count = var.is_read_replica ? 0 : 1 
+  count = var.is_read_replica ? 0 : 1 # Only create if it's not a read replica
 
   allocated_storage      = var.db_allocated_storage
   engine                 = var.db_engine
