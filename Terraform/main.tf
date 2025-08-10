@@ -126,64 +126,76 @@ module "secondary_eks" {
     module.vpc_peering
   ]
 }
-# Primary Database
+# Primary Database Module (Standalone/Source)
 module "primary_database" {
   source = "./modules/aws-region-base/rds"
-  region              = var.primary_region
-  environment_tag     = "Production"
-  vpc_id              = module.primary_networking.vpc_id
-  private_subnet_ids  = module.primary_networking.private_subnet_ids
-  replica_region      = var.secondary_region
+  vpc_id             = module.primary_networking.vpc_id
+  private_subnet_ids = module.primary_networking.private_subnet_ids
 
+  # Region and Environment
+  region        = var.primary_region
+  environment_tag = "Production"
+  secondary_region_to_replicate_to = var.secondary_region 
+
+  # Database configuration variables
   db_name                  = var.primary_db_name
   db_instance_class        = var.primary_db_instance_class
   db_engine                = var.primary_db_engine
   db_engine_version        = var.primary_db_engine_version
   db_allocated_storage     = var.primary_db_allocated_storage
   db_master_username       = var.primary_db_master_username
-  db_master_password       = random_password.shared_db_master_password.result
+  db_master_password       = var.primary_db_master_password 
   db_port                  = var.primary_db_port
   db_skip_final_snapshot   = var.primary_db_skip_final_snapshot
   db_backup_retention_period = var.primary_db_backup_retention_period
   db_deletion_protection   = var.primary_db_deletion_protection
   db_multi_az              = var.primary_db_multi_az
-
-  is_read_replica       = false
-  source_db_instance_arn = null
+  is_read_replica = false
 
   providers = {
     aws = aws.primary
   }
+
+  depends_on = [
+    module.primary_networking
+  ]
 }
 
-# Secondary Database (Read Replica)
+# Secondary Database Module (Cross-Region Read Replica)
 module "secondary_database" {
   source = "./modules/aws-region-base/rds"
-  region              = var.secondary_region
-  environment_tag     = "DisasterRecovery"
-  vpc_id              = module.secondary_networking.vpc_id
-  private_subnet_ids  = module.secondary_networking.private_subnet_ids
-  replica_region      = null # No replication from replica
-
+  vpc_id             = module.secondary_networking.vpc_id
+  private_subnet_ids = module.secondary_networking.private_subnet_ids
+  # Region and Environment
+  region        = var.secondary_region
+  environment_tag = "DisasterRecovery"
+  # Database configuration variables (still passed, though many are inherited by replica)
   db_name                  = var.secondary_db_name
   db_instance_class        = var.secondary_db_instance_class
-  db_engine                = var.primary_db_engine 
-  db_engine_version        = var.primary_db_engine_version 
+  db_engine                = var.secondary_db_engine
+  db_engine_version        = var.secondary_db_engine_version
   db_allocated_storage     = var.secondary_db_allocated_storage
-  db_master_username       = var.primary_db_master_username 
-  db_master_password       = random_password.shared_db_master_password.result
-  db_port                  = var.primary_db_port 
+  # REMOVED: db_master_username and db_master_password for replica as its secret won't be created here
+  db_master_username       = var.primary_db_master_username # Replica uses primary username
+  db_master_password       = var.primary_db_master_password # Replica uses primary password
+  db_port                  = var.secondary_db_port
   db_skip_final_snapshot   = var.secondary_db_skip_final_snapshot
   db_backup_retention_period = var.secondary_db_backup_retention_period
   db_deletion_protection   = var.secondary_db_deletion_protection
   db_multi_az              = var.secondary_db_multi_az
 
-  is_read_replica       = true
+  # --- CRITICAL: Link to primary database for cross-region replication ---
+  is_read_replica        = true
   source_db_instance_arn = module.primary_database.db_instance_arn
 
   providers = {
     aws = aws.secondary
   }
+
+  depends_on = [
+    module.secondary_networking,
+    module.primary_database # Ensure primary DB exists before creating replica
+  ]
 }
 
 
