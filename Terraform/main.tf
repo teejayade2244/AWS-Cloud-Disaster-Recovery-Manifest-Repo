@@ -167,12 +167,12 @@ module "secondary_database" {
 
   db_name                  = var.secondary_db_name
   db_instance_class        = var.secondary_db_instance_class
-  db_engine                = var.primary_db_engine # Use primary's engine
-  db_engine_version        = var.primary_db_engine_version # Use primary's version
+  db_engine                = var.primary_db_engine 
+  db_engine_version        = var.primary_db_engine_version 
   db_allocated_storage     = var.secondary_db_allocated_storage
-  db_master_username       = var.primary_db_master_username # Use primary's username
+  db_master_username       = var.primary_db_master_username 
   db_master_password       = random_password.shared_db_master_password.result
-  db_port                  = var.primary_db_port # Use primary's port
+  db_port                  = var.primary_db_port 
   db_skip_final_snapshot   = var.secondary_db_skip_final_snapshot
   db_backup_retention_period = var.secondary_db_backup_retention_period
   db_deletion_protection   = var.secondary_db_deletion_protection
