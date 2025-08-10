@@ -11,7 +11,8 @@ resource "random_password" "db_master_password" {
   count            = var.db_master_password != null ? 0 : 1 
   length           = 16
   special          = true
-  override_special = "!@#$%^&*"
+  # Updated to exclude characters not allowed by RDS: / @ " and spaces
+  override_special = "!#$%^&*()_+-=[]{}|;:,.<>?"
   min_lower        = 1
   min_upper        = 1
   min_numeric      = 1
