@@ -104,12 +104,8 @@ resource "aws_db_instance" "read_replica" {
   backup_retention_period = var.db_backup_retention_period
   deletion_protection    = var.db_deletion_protection
   publicly_accessible    = false
-  # Note: The username, password, engine, engine_version, allocated_storage,
-  # and port are inherited from the source DB during replication setup.
-  # However, for consistency and potential promotion, the secrets manager secret
-  # associated with this replica will store the same credentials as the primary.
-  username               = var.db_master_username
-  password               = local.actual_db_password # Store the determined password in the replica's secret
+  # REMOVED: username, password, engine, engine_version, allocated_storage, port
+  # These are inherited from the source DB instance when replicate_source_db is used.
 
   tags = {
     Name        = "${var.environment_tag}-${var.region}-rds-read-replica"
