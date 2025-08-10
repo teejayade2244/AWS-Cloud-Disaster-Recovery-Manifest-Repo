@@ -87,7 +87,7 @@ module "primary_eks" {
    providers = {
     aws = aws.primary
     tls = tls.primary
-    aws.primary = aws.primary  # Add this line
+    aws.primary = aws.primary  
   }
 
   depends_on = [
