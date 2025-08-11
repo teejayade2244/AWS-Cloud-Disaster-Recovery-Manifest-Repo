@@ -30,8 +30,8 @@ data:
 # create backend deployment
 apiVersion: apps/v1
 kind: Deployment
-namespace: aura-flow-dev
 metadata:
+  namespace: aura-flow-dev
   name: fastapi-backend-deployment
   labels:
     app: fastapi-backend
@@ -48,7 +48,7 @@ spec:
       serviceAccountName: aura-flow-backend-sa 
       containers:
       - name: fastapi-backend
-        image: teejay4125/backend:irsa-latest 
+        image: teejay4125/backend2
         ports:
         - containerPort: 8000 
         envFrom:
