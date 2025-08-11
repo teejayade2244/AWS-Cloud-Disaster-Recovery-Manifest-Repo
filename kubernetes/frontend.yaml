@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
-namespace: aura-flow-dev
 metadata:
   name: react-frontend-deployment
+  namespace: aura-flow-dev
   labels:
     app: react-frontend
 spec:
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: react-frontend
-        image: your-docker-registry/your-react-frontend-image:latest 
+        image: teejay4125/frontend
         ports:
         - containerPort: 80 
         resources:
@@ -44,8 +44,8 @@ spec:
 # create frontend service
 apiVersion: v1
 kind: Service
-namespace: aura-flow-dev
 metadata:
+  namespace: aura-flow-dev
   name: react-frontend-service
   labels:
     app: react-frontend
@@ -62,17 +62,13 @@ spec:
 # create frontend ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
-namespace: aura-flow-dev
 metadata:
+  namespace: aura-flow-dev
   name: react-frontend-ingress
   annotations:
-    kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300
-    # alb.ingress.kubernetes.io/subnets: 
-    #   # Example: "subnet-0abcdef1234567890,subnet-0fedcba9876543210"
-    #   "YOUR_PUBLIC_SUBNET_ID_1,YOUR_PUBLIC_SUBNET_ID_2"
     alb.ingress.kubernetes.io/healthcheck-path: / 
     alb.ingress.kubernetes.io/healthcheck-port: "80"
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
@@ -80,6 +76,7 @@ metadata:
   labels:
     app: react-frontend
 spec:
+  ingressClassName: alb
   rules:
   - http:
       paths:
