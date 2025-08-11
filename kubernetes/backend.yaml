@@ -80,7 +80,6 @@ spec:
 # create backend service
 apiVersion: v1
 kind: Service
-
 metadata:
   namespace: aura-flow-dev  
   name: fastapi-backend-service
@@ -99,12 +98,12 @@ spec:
 # create backend ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
-namespace: aura-flow-dev
 metadata:
+  namespace: aura-flow-dev
   name: fastapi-backend-ingress
   annotations:
     kubernetes.io/ingress.class: alb 
-    alb.ingress.kubernetes.io/scheme: internet-facing 
+    alb.ingress.kubernetes.io/scheme: internal
     alb.ingress.kubernetes.io/target-type: ip 
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300 
     # alb.ingress.kubernetes.io/subnets: 
@@ -119,7 +118,7 @@ spec:
   rules:
   - http:
       paths:
-      - path: /api/*
+      - path: /api/
         pathType: ImplementationSpecific
         backend:
           service:
