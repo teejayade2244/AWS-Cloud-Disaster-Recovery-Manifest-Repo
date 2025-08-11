@@ -1,12 +1,18 @@
+locals {
+  allowed_db_special_chars = "!#$%&*()-_=+[]{}|;:,.<>?" # Excludes /, @, ", space
+}
+
 resource "random_password" "shared_db_master_password" {
   length           = 16
   special          = true
-
+  # Override special characters to only use those allowed by RDS
+  override_special = local.allowed_db_special_chars
   min_lower        = 1
   min_upper        = 1
   min_numeric      = 1
   min_special      = 1
 }
+
 
 module "primary_networking" {
   source = "./modules/aws-region-base/networking"
