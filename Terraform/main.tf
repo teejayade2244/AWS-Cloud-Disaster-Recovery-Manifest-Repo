@@ -1,7 +1,7 @@
 resource "random_password" "shared_db_master_password" {
   length           = 16
   special          = true
-  override_special = "!#$%&*()-_=+[]{}|;:,.<>?"
+
   min_lower        = 1
   min_upper        = 1
   min_numeric      = 1
@@ -130,6 +130,7 @@ module "secondary_eks" {
 data "aws_secretsmanager_secret_version" "db_master_password" {
   secret_id = "production/eu-west-2/db-credentials-20250810202507717300000001" 
   provider  = aws.primary 
+   depends_on = [module.primary_database]
 }
 
 # Primary Database Module (Standalone/Source)
@@ -150,7 +151,7 @@ module "primary_database" {
   db_engine_version        = var.primary_db_engine_version
   db_allocated_storage     = var.primary_db_allocated_storage
   db_master_username       = var.primary_db_master_username
-  db_master_password       = data.aws_secretsmanager_secret_version.db_master_password.secret_string
+  db_master_password       = random_password.shared_db_master_password.result
   db_port                  = var.primary_db_port
   db_skip_final_snapshot   = var.primary_db_skip_final_snapshot
   db_backup_retention_period = var.primary_db_backup_retention_period

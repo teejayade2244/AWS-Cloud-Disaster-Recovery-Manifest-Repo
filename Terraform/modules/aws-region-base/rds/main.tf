@@ -118,7 +118,7 @@ resource "aws_secretsmanager_secret" "db_credentials" {
   count = var.is_read_replica ? 0 : 1 # Only create this secret for the primary DB
 
   # Convert environment_tag to lowercase for valid AWS naming
-  name_prefix = "${lower(var.environment_tag)}/${var.region}/db-credentials-"
+  name_prefix = "${lower(var.environment_tag)}/${var.region}/db-credentials"
   description = "Database credentials for RDS instance in ${var.region} ${var.environment_tag}"
 
   tags = {
