@@ -21,6 +21,7 @@ module "primary_networking" {
   public_subnet_cidrs = var.primary_public_subnet_cidrs
   private_subnet_cidrs = var.primary_private_subnet_cidrs
   environment_tag     = "Production"
+  cluster_name        = "${var.cluster_name_prefix}-${var.primary_region}"
   providers = {
     aws = aws.primary
   }
@@ -33,10 +34,12 @@ module "secondary_networking" {
   public_subnet_cidrs = var.secondary_public_subnet_cidrs
   private_subnet_cidrs = var.secondary_private_subnet_cidrs
   environment_tag     = "DisasterRecovery"
+  cluster_name        = "${var.cluster_name_prefix}-${var.secondary_region}"
   providers = {
     aws = aws.secondary
   }
 }
+
 
 module "vpc_peering" {
   source = "./modules/aws-region-base/peering"

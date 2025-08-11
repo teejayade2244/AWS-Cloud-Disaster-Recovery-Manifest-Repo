@@ -23,3 +23,8 @@ variable "environment_tag" {
   description = "Tag for the environment (e.g., Production, DisasterRecovery)."
   type        = string
 }
+
+variable "cluster_name" {
+  description = "Name of the EKS cluster for Kubernetes subnet tagging."
+  type        = string
+}

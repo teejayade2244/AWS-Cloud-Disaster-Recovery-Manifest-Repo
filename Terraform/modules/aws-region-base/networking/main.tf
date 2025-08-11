@@ -42,8 +42,10 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true 
 
   tags = {
-    Name        = "aura-flow-${var.region}-public-subnet-${count.index + 1}"
-    Environment = var.environment_tag
+    Name                                        = "aura-flow-${var.region}-public-subnet-${count.index + 1}"
+    Environment                                 = var.environment_tag
+    "kubernetes.io/role/elb"                   = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
 
@@ -55,8 +57,10 @@ resource "aws_subnet" "private" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name        = "aura-flow-${var.region}-private-subnet-${count.index + 1}"
-    Environment = var.environment_tag
+    Name                                        = "aura-flow-${var.region}-private-subnet-${count.index + 1}"
+    Environment                                 = var.environment_tag
+    "kubernetes.io/role/internal-elb"          = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
 
