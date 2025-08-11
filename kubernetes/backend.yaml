@@ -102,16 +102,17 @@ metadata:
   namespace: aura-flow-dev
   name: fastapi-backend-ingress
   annotations:
-    kubernetes.io/ingress.class: alb 
+    kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internal
-    alb.ingress.kubernetes.io/target-type: ip 
-    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300 
-    # alb.ingress.kubernetes.io/subnets: 
-    #   "YOUR_PUBLIC_SUBNET_ID_1,YOUR_PUBLIC_SUBNET_ID_2"
-    alb.ingress.kubernetes.io/healthcheck-path: /health 
-    alb.ingress.kubernetes.io/healthcheck-port: "8000" 
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300
+    # Auto-discover subnets using standard Kubernetes tags
+    # No subnet annotation needed - controller will automatically find subnets tagged with:
+    # kubernetes.io/role/internal-elb=1 and kubernetes.io/cluster/CLUSTER_NAME=owned
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-port: "8000"
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-    alb.ingress.kubernetes.io/backend-protocol: HTTP 
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
   labels:
     app: fastapi-backend
 spec:
