@@ -19,7 +19,7 @@ spec:
       - name: react-frontend
         image: teejay4125/frontend
         ports:
-        - containerPort: 80 
+        - containerPort: 8080
         resources:
           requests:
             memory: "64Mi"
@@ -55,7 +55,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80 
+      targetPort: 8080 
   type: ClusterIP
 
 ---
@@ -70,7 +70,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300
     alb.ingress.kubernetes.io/healthcheck-path: / 
-    alb.ingress.kubernetes.io/healthcheck-port: "80"
+    alb.ingress.kubernetes.io/healthcheck-port: "8080"
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/backend-protocol: HTTP
   labels:
