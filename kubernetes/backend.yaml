@@ -80,8 +80,9 @@ spec:
 # create backend service
 apiVersion: v1
 kind: Service
-namespace: aura-flow-dev
+
 metadata:
+  namespace: aura-flow-dev  
   name: fastapi-backend-service
   labels:
     app: fastapi-backend
