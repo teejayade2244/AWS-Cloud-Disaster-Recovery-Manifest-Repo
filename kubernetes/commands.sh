@@ -1,1 +1,1 @@
-kubectl create secret generic backend-api --from-literal=DB_SECRET_ARN=arn:aws:secretsmanager:eu-west-2:899411341244:secret:Production/eu-west-2/db-credentials-U9BEVi --from-literal=AWS_REGION=eu-west-2
+kubectl create secret generic backend-api --from-literal=DB_SECRET_ARN=arn:aws:secretsmanager:eu-west-2:899411341244:secret:production-eu-west-2-db-credentials-8VJxaN --from-literal=AWS_REGION=eu-west-2 -n aura-flow-dev
