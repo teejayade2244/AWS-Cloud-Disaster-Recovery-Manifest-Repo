@@ -15,7 +15,7 @@ output "db_instance_arn" {
 
 output "db_secret_arn" {
   description = "The ARN of the Secrets Manager secret storing DB credentials."
-  value       = aws_secretsmanager_secret.db_credentials.arn
+  value       = var.is_read_replica ? null : aws_secretsmanager_secret.db_credentials[0].arn
 }
 
 output "db_master_username" {
