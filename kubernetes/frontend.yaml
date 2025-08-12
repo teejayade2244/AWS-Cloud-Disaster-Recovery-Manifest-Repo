@@ -87,3 +87,8 @@ spec:
             name: react-frontend-service
             port:
               number: 80
+
+
+#  sudo docker build -t frontend .
+#  sudo docker tag frontend teejay4125/frontend
+#  sudo docker push teejay4125/frontend

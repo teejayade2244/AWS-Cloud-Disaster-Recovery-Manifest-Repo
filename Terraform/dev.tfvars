@@ -48,3 +48,7 @@ secondary_db_multi_az            = false
 project_name    = "aura-flow"
 application_names = ["backend-api", "frontend-app"]
 
+# GitHub Actions OIDC Role
+organization_name = "teejayade2244" # Replace with your GitHub organization name
+repository_name  = "Cloud-Disaster-Recovery-Demo-App-React-Frontend-and-Python-Backend" # Replace with your GitHub repository name
+
