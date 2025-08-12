@@ -33,7 +33,7 @@ resource "aws_iam_role" "github_actions_oidc_role" {
           }
           StringLike = {
             "${replace(aws_iam_openid_connect_provider.github_actions.url, "https://", "")}:sub" = [
-              "repo:${var.github_organization}/${var.github_repository}:ref:refs/heads/main",
+              "repo:${var.github_organization}/${var.github_repository}:ref:refs/heads/master",
               "repo:${var.github_organization}/${var.github_repository}:pull_request",
               "repo:${var.github_organization}/${var.github_repository}:environment:prod"
             ]
