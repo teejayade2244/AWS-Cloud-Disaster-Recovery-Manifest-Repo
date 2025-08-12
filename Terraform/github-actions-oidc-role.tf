@@ -51,6 +51,7 @@ resource "aws_iam_role" "github_actions_oidc_role" {
 
 # ECR Push Policy
 # ECR Push Policy
+# ECR Push Policy
 resource "aws_iam_role_policy" "ecr_push_policy" {
   name = "${var.project_name}-github-actions-ecr-push"
   role = aws_iam_role.github_actions_oidc_role.name
@@ -70,7 +71,14 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload"
         ],
-        Resource = [for name in var.application_names : "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-${name}"]
+        Resource = concat(
+          [
+            for name in var.application_names : "arn:aws:ecr:${var.primary_region}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-Production-${var.primary_region}-${name}"
+          ],
+          [
+            for name in var.application_names : "arn:aws:ecr:${var.secondary_region}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-DisasterRecovery-${var.secondary_region}-${name}"
+          ]
+        )
       },
       # Statement for global ECR actions (like GetAuthorizationToken)
       {
@@ -80,11 +88,12 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
           "ecr:CreateRepository",
           "ecr:DescribeRepositories"
         ],
-        Resource = "*" 
+        Resource = "*"
       }
     ]
   })
 }
+
 
 # EKS Policies
 data "aws_iam_policy" "eks_cluster_policy" {
