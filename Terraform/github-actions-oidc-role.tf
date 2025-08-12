@@ -50,6 +50,7 @@ resource "aws_iam_role" "github_actions_oidc_role" {
 }
 
 # ECR Push Policy
+# ECR Push Policy
 resource "aws_iam_role_policy" "ecr_push_policy" {
   name = "${var.project_name}-github-actions-ecr-push"
   role = aws_iam_role.github_actions_oidc_role.name
@@ -57,6 +58,7 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+      # Statement for ECR actions on specific repositories
       {
         Effect = "Allow",
         Action = [
@@ -66,18 +68,19 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
           "ecr:PutImage",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:GetAuthorizationToken"
+          "ecr:CompleteLayerUpload"
         ],
         Resource = [for name in var.application_names : "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-${name}"]
       },
+      # Statement for global ECR actions (like GetAuthorizationToken)
       {
         Effect = "Allow",
         Action = [
+          "ecr:GetAuthorizationToken",
           "ecr:CreateRepository",
           "ecr:DescribeRepositories"
         ],
-        Resource = "*"
+        Resource = "*" 
       }
     ]
   })
