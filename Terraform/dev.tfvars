@@ -49,6 +49,6 @@ project_name    = "aura-flow"
 application_names = ["backend-api", "frontend-app"]
 
 # GitHub Actions OIDC Role
-organization_name = "teejayade2244" # Replace with your GitHub organization name
-repository_name  = "Cloud-Disaster-Recovery-Demo-App-React-Frontend-and-Python-Backend" # Replace with your GitHub repository name
+github_organization = "teejayade2244" # Replace with your GitHub organization name
+github_repository  = "Cloud-Disaster-Recovery-Demo-App-React-Frontend-and-Python-Backend" # Replace with your GitHub repository name
 
