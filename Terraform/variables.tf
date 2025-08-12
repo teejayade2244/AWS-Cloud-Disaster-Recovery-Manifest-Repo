@@ -216,3 +216,13 @@ variable "application_names" {
 #   type        = string
 #   sensitive   = true # Mark as sensitive to prevent showing in plan output
 # }
+
+variable "github_organization" {
+  description = "GitHub organization name"
+  type        = string
+}
+
+variable "github_repository" {
+  description = "GitHub repository name"
+  type        = string
+}

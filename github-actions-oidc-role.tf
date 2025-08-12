@@ -26,7 +26,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_iam_openid_connect_provider" "github_actions" {
   url             = "https://token.actions.githubusercontent.com"
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["7560d6f40fa55195f740ee2b7b7c0b4836cbe103"] # NEW thumbprint
+  thumbprint_list = ["7560d6f40fa55195f740ee2b7b7c0b4836cbe103"]
 
   tags = {
     Name        = "${var.project_name}-github-oidc-provider"
