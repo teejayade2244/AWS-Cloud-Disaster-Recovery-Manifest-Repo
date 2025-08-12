@@ -1,23 +1,3 @@
-variable "project_name" {
-  description = "Name of the project"
-  type        = string
-}
-
-variable "github_organization" {
-  description = "GitHub organization name"
-  type        = string
-}
-
-variable "github_repository" {
-  description = "GitHub repository name"
-  type        = string
-}
-
-variable "application_names" {
-  description = "List of application names for ECR repositories"
-  type        = list(string)
-}
-
 
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
