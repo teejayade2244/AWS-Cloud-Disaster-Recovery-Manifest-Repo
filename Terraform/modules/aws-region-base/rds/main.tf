@@ -92,6 +92,7 @@ resource "aws_db_instance" "main" {
 }
 
 # Read Replica DB Instance (if it is a read replica)
+# Read Replica DB Instance (if it is a read replica)
 resource "aws_db_instance" "read_replica" {
   count = var.is_read_replica ? 1 : 0
 
@@ -105,6 +106,9 @@ resource "aws_db_instance" "read_replica" {
   deletion_protection    = var.db_deletion_protection
   publicly_accessible    = false
   final_snapshot_identifier = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}-replica-final-snapshot"
+
+  # Use a different database name for the replica
+  db_name = "${var.db_name}_replica"
 
   tags = {
     Name        = "${var.environment_tag}-${var.region}-rds-read-replica"
