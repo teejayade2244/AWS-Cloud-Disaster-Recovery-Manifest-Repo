@@ -57,7 +57,7 @@ spec:
       serviceAccountName: aura-flow-backend-sa 
       containers:
       - name: fastapi-backend
-        image: 899411341244.dkr.ecr.eu-west-2.amazonaws.com/aura-flow-production-eu-west-2-backend-api:aac4799fb9bcd005ae05f6ae7c9c9b50d06d65a9
+        image: 899411341244.dkr.ecr.us-east-1.amazonaws.com/aura-flow-production-us-east-1-backend-api:864950209ca07ae8eb1b05c12c3b36172395c3a6
         ports:
         - containerPort: 8000 
         envFrom:
