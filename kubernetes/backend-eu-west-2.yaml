@@ -64,7 +64,7 @@ spec:
         - configMapRef:
             name: backend-config
         - secretRef:
-             name: backend-api
+             name: backend
         resources: 
           requests:
             memory: "128Mi"
