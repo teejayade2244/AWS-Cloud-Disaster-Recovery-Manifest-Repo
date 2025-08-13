@@ -15,7 +15,7 @@ metadata:
   namespace: aura-flow-dev
   labels:
     app: fastapi-backend
-  region: us-east-1
+    region: us-east-1
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::899411341244:role/backend-secrets-manager-role
 
