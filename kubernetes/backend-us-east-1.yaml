@@ -47,7 +47,6 @@ spec:
   selector:
     matchLabels:
       app: fastapi-backend
-      region: us-east-1
   template:
     metadata:
       labels:
@@ -98,7 +97,6 @@ metadata:
 spec:
   selector:
     app: fastapi-backend 
-    region: us-east-1
   ports:
     - protocol: TCP
       port: 8000         
