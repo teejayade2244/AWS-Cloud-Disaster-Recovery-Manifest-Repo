@@ -17,7 +17,7 @@ metadata:
     app: fastapi-backend
     region: us-east-1
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::899411341244:role/backend-secrets-manager-role
+    eks.amazonaws.com/role-arn: arn:aws:iam::899411341244:role/backend-secrets-manager-role-us-1-east
 
 ---
 # create backend configmap for CORS
