@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-frontend-deployment
+  namespace: aura-flow-dev
+  labels:
+    app: react-frontend
+    region: us-east-1
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: react-frontend
+      region: us-east-1
+  template:
+    metadata:
+      labels:
+        app: react-frontend
+        region: us-east-1
+    spec:
+      containers:
+      - name: react-frontend
+        image: teejay4125/frontend
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 80
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 15
+        # readinessProbe:
+        #   httpGet:
+        #     path: / 
+        #     port: 80
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+
+---
+# create frontend service
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: aura-flow-dev
+  name: react-frontend-service
+  labels:
+    app: react-frontend
+    region: us-east-1
+spec:
+  selector:
+    app: react-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080 
+  type: ClusterIP
+
+---
+# create frontend ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: aura-flow-dev
+  name: react-frontend-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=300
+    # alb.ingress.kubernetes.io/healthcheck-path: / 
+    # alb.ingress.kubernetes.io/healthcheck-port: "8080"
+    # alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    # alb.ingress.kubernetes.io/backend-protocol: HTTP
+  labels:
+    app: react-frontend
+    region: us-east-1
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - path: / 
+        pathType: Prefix
+        backend:
+          service:
+            name: react-frontend-service
+            port:
+              number: 80
