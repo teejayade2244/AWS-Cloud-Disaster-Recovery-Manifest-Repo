@@ -21,7 +21,7 @@ node_group_max_size   = 3
 node_group_min_size   = 1
 
 # Database Configuration
-primary_db_name                = "appdb_primary_aura-flow"
+primary_db_name                = "appdb_primary"
 primary_db_instance_class      = "db.t3.small"
 primary_db_engine              = "postgres"
 primary_db_engine_version      = "14.17"
