@@ -50,8 +50,6 @@ resource "aws_iam_role" "github_actions_oidc_role" {
 }
 
 # ECR Push Policy
-# ECR Push Policy
-# ECR Push Policy
 resource "aws_iam_role_policy" "ecr_push_policy" {
   name = "${var.project_name}-github-actions-ecr-push"
   role = aws_iam_role.github_actions_oidc_role.name
