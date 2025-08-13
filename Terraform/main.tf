@@ -185,7 +185,7 @@ module "secondary_database" {
   cross_region_vpc_cidr = var.primary_vpc_cidr
   
   # Database configuration variables
-   db_name = "${var.secondary_db_name}_replica"
+  db_name = "${var.secondary_db_name}_replica"
   db_instance_class        = var.secondary_db_instance_class
   db_engine                = var.secondary_db_engine
   db_engine_version        = var.secondary_db_engine_version
