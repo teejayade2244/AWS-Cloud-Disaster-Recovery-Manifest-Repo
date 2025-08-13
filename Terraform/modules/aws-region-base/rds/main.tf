@@ -92,8 +92,6 @@ resource "aws_db_instance" "main" {
 }
 
 # Read Replica DB Instance (if it is a read replica)
-# Read Replica DB Instance (if it is a read replica)
-# Read Replica DB Instance (if it is a read replica)
 resource "aws_db_instance" "read_replica" {
   count = var.is_read_replica ? 1 : 0
 

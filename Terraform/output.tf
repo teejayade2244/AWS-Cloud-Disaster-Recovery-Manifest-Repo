@@ -124,3 +124,4 @@ output "secondary_db_secret_name" {
   description = "Name of the secondary database secret for Kubernetes."
   value       = module.secondary_database.db_secret_name
 }
+
