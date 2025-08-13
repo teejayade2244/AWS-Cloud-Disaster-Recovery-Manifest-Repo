@@ -117,7 +117,7 @@ resource "aws_db_instance" "read_replica" {
 resource "aws_secretsmanager_secret" "primary_db_credentials" {
   count = var.is_read_replica ? 0 : 1
 
-  name        = "${lower(var.environment_tag)}-${var.region}-db-credentials"
+  name        = "${lower(var.environment_tag)}-${var.region}-database-credentials"
   description = "Database credentials for primary RDS instance in ${var.region} ${var.environment_tag}"
 
   tags = {
