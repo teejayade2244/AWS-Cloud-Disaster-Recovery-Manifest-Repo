@@ -16,13 +16,13 @@ output "db_instance_arn" {
 }
 
 output "db_secret_arn" {
-  description = "The ARN of the Secrets Manager secret storing DB credentials (only for primary)."
-  value       = var.is_read_replica ? null : aws_secretsmanager_secret.db_credentials[0].arn
+  description = "The ARN of the Secrets Manager secret storing DB credentials."
+  value       = var.is_read_replica ? aws_secretsmanager_secret.replica_db_credentials[0].arn : aws_secretsmanager_secret.primary_db_credentials[0].arn
 }
 
 output "db_secret_name" {
-  description = "The name of the Secrets Manager secret storing DB credentials (only for primary)."
-  value       = var.is_read_replica ? null : aws_secretsmanager_secret.db_credentials[0].name
+  description = "The name of the Secrets Manager secret storing DB credentials."
+  value       = var.is_read_replica ? aws_secretsmanager_secret.replica_db_credentials[0].name : aws_secretsmanager_secret.primary_db_credentials[0].name
 }
 
 output "db_master_username" {

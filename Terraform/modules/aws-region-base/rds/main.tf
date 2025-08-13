@@ -37,6 +37,18 @@ resource "aws_security_group" "rds_sg" {
     description = "Allow database traffic from within VPC"
   }
 
+  # Add ingress rule for cross-region VPC access (for read replica)
+  dynamic "ingress" {
+    for_each = var.cross_region_vpc_cidr != null ? [1] : []
+    content {
+      from_port   = var.db_port
+      to_port     = var.db_port
+      protocol    = "tcp"
+      cidr_blocks = [var.cross_region_vpc_cidr]
+      description = "Allow database traffic from cross-region VPC"
+    }
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -101,35 +113,58 @@ resource "aws_db_instance" "read_replica" {
   }
 }
 
-# Secret Manager for DB Credentials (only created for the primary database)
-resource "aws_secretsmanager_secret" "db_credentials" {
-  count = var.is_read_replica ? 0 : 1 # Only create this secret for the primary DB
+# Secret Manager for DB Credentials - PRIMARY DATABASE
+resource "aws_secretsmanager_secret" "primary_db_credentials" {
+  count = var.is_read_replica ? 0 : 1
 
-  # Use a fixed name for the secret for easier referencing in Kubernetes
-  name        = "${lower(var.environment_tag)}-${var.region}-db-credentials" # <-- FIXED NAME
-  description = "Database credentials for RDS instance in ${var.region} ${var.environment_tag}"
+  name        = "${lower(var.environment_tag)}-${var.region}-db-credentials"
+  description = "Database credentials for primary RDS instance in ${var.region} ${var.environment_tag}"
 
   tags = {
     Environment = var.environment_tag
     Region      = var.region
+    DatabaseType = "primary"
   }
 
-  dynamic "replica" {
-    for_each = var.is_read_replica ? [] : [var.secondary_region_to_replicate_to]
-    content {
-      region = replica.value
-    }
-  }
+  # Remove automatic replication - we'll create separate secrets
 }
 
-resource "aws_secretsmanager_secret_version" "db_credentials_version" {
+resource "aws_secretsmanager_secret_version" "primary_db_credentials_version" {
   count = var.is_read_replica ? 0 : 1
 
-  secret_id = aws_secretsmanager_secret.db_credentials[0].id
+  secret_id = aws_secretsmanager_secret.primary_db_credentials[0].id
   secret_string = jsonencode({
     db_name  = var.db_name
     engine   = var.db_engine
     host     = aws_db_instance.main[0].address
+    password = var.db_master_password
+    port     = var.db_port
+    username = var.db_master_username
+  })
+}
+
+# Secret Manager for DB Credentials - READ REPLICA DATABASE
+resource "aws_secretsmanager_secret" "replica_db_credentials" {
+  count = var.is_read_replica ? 1 : 0
+
+  name        = "${lower(var.environment_tag)}-${var.region}-db-credentials"
+  description = "Database credentials for read replica RDS instance in ${var.region} ${var.environment_tag}"
+
+  tags = {
+    Environment = var.environment_tag
+    Region      = var.region
+    DatabaseType = "replica"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "replica_db_credentials_version" {
+  count = var.is_read_replica ? 1 : 0
+
+  secret_id = aws_secretsmanager_secret.replica_db_credentials[0].id
+  secret_string = jsonencode({
+    db_name  = var.db_name
+    engine   = var.db_engine
+    host     = aws_db_instance.read_replica[0].address  # CORRECT: Points to replica endpoint
     password = var.db_master_password
     port     = var.db_port
     username = var.db_master_username

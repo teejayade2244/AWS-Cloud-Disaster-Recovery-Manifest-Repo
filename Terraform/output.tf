@@ -91,3 +91,36 @@ output "secondary_alb_ingress_controller_role_arn" {
   description = "ARN of the IAM role for the ALB Ingress Controller Service Account in the secondary region."
   value       = module.secondary_eks.alb_ingress_controller_role_arn # Correctly references module output
 }
+
+# Add these to your existing output.tf file
+
+# --- Database Outputs ---
+output "primary_db_endpoint" {
+  description = "The endpoint of the primary RDS database."
+  value       = module.primary_database.db_instance_endpoint
+}
+
+output "secondary_db_endpoint" {
+  description = "The endpoint of the secondary RDS database (read replica)."
+  value       = module.secondary_database.db_instance_endpoint
+}
+
+output "primary_db_secret_arn" {
+  description = "ARN of the primary database secret."
+  value       = module.primary_database.db_secret_arn
+}
+
+output "secondary_db_secret_arn" {
+  description = "ARN of the secondary database secret."
+  value       = module.secondary_database.db_secret_arn
+}
+
+output "primary_db_secret_name" {
+  description = "Name of the primary database secret for Kubernetes."
+  value       = module.primary_database.db_secret_name
+}
+
+output "secondary_db_secret_name" {
+  description = "Name of the secondary database secret for Kubernetes."
+  value       = module.secondary_database.db_secret_name
+}

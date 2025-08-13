@@ -93,9 +93,11 @@ variable "source_db_instance_arn" {
   default     = null # Only required if is_read_replica is true
 }
 
-# --- NEW: Secondary region for Secrets Manager replication ---
-variable "secondary_region_to_replicate_to" {
-  description = "The region to replicate the primary secret to. Only relevant for primary DB secrets."
+# REMOVED: secondary_region_to_replicate_to (no longer needed)
+
+# NEW: Cross-region VPC CIDR for security group access
+variable "cross_region_vpc_cidr" {
+  description = "The CIDR block of the cross-region VPC for database access (used for read replica access)."
   type        = string
-  default     = null # Only applicable for the primary secret
+  default     = null
 }

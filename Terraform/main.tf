@@ -13,7 +13,6 @@ resource "random_password" "shared_db_master_password" {
   min_special      = 1
 }
 
-
 module "primary_networking" {
   source = "./modules/aws-region-base/networking"
   region              = var.primary_region
@@ -39,7 +38,6 @@ module "secondary_networking" {
     aws = aws.secondary
   }
 }
-
 
 module "vpc_peering" {
   source = "./modules/aws-region-base/peering"
@@ -136,12 +134,6 @@ module "secondary_eks" {
   ]
 }
 
-data "aws_secretsmanager_secret_version" "db_master_password" {
-  secret_id = "production-eu-west-2-db-credentials" 
-  provider  = aws.primary 
-   depends_on = [module.primary_database]
-}
-
 # Primary Database Module (Standalone/Source)
 module "primary_database" {
   source = "./modules/aws-region-base/rds"
@@ -151,7 +143,9 @@ module "primary_database" {
   # Region and Environment
   region        = var.primary_region
   environment_tag = "Production"
-  secondary_region_to_replicate_to = var.secondary_region 
+  
+  # Cross-region access for read replica
+  cross_region_vpc_cidr = var.secondary_vpc_cidr
 
   # Database configuration variables
   db_name                  = var.primary_db_name
@@ -182,17 +176,22 @@ module "secondary_database" {
   source = "./modules/aws-region-base/rds"
   vpc_id             = module.secondary_networking.vpc_id
   private_subnet_ids = module.secondary_networking.private_subnet_ids
+  
   # Region and Environment
   region        = var.secondary_region
   environment_tag = "DisasterRecovery"
-  # Database configuration variables (still passed, though many are inherited by replica)
+  
+  # Cross-region access from primary region
+  cross_region_vpc_cidr = var.primary_vpc_cidr
+  
+  # Database configuration variables
   db_name                  = var.secondary_db_name
   db_instance_class        = var.secondary_db_instance_class
   db_engine                = var.secondary_db_engine
   db_engine_version        = var.secondary_db_engine_version
   db_allocated_storage     = var.secondary_db_allocated_storage
   db_master_username       = var.primary_db_master_username 
-  db_master_password       = data.aws_secretsmanager_secret_version.db_master_password.secret_string 
+  db_master_password       = random_password.shared_db_master_password.result  # Use the same password
   db_port                  = var.secondary_db_port
   db_skip_final_snapshot   = var.secondary_db_skip_final_snapshot
   db_backup_retention_period = var.secondary_db_backup_retention_period
