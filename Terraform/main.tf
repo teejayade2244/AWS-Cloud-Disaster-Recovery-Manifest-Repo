@@ -213,7 +213,6 @@ module "secondary_database" {
   ]
 }
 
-
 module "primary_ecr_repos" {
   source = "./modules/aws-region-base/ecr"
   project_name    = var.project_name
