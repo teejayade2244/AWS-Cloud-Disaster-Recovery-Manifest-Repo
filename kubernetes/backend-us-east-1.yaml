@@ -47,6 +47,7 @@ spec:
   selector:
     matchLabels:
       app: fastapi-backend
+      region: us-east-1
   template:
     metadata:
       labels:
