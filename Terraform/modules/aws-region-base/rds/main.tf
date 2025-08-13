@@ -69,7 +69,7 @@ resource "aws_db_instance" "main" {
   identifier             = "${lower(var.environment_tag)}-${var.region}-${replace(var.db_name, "_", "-")}"
   allocated_storage      = var.db_allocated_storage
   engine                 = var.db_engine
-  engine_version         = var.db_engine_version
+  engine_version         = "14.12"
   instance_class         = var.db_instance_class
   db_name                = var.db_name
   username               = var.db_master_username
