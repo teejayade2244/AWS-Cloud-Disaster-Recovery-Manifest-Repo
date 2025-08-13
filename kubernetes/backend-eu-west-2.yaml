@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: aura-flow-dev
+  labels:
+    region: eu-west-2
 ---
 # create service account for backend
 # This service account will be used by the backend to access AWS Secrets Manager
@@ -11,6 +13,9 @@ kind: ServiceAccount
 metadata:
   name: aura-flow-backend-sa
   namespace: aura-flow-dev
+  labels:
+    app: fastapi-backend 
+    region: eu-west-2
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::899411341244:role/backend-secrets-manager-role
 
@@ -23,6 +28,7 @@ metadata:
   namespace: aura-flow-dev
   labels:
     app: fastapi-backend
+    region: eu-west-2
 data:
   CORS_ALLOWED_ORIGINS: "http://k8s-auraflow-reactfro-6cd6adc8a3-1336861186.eu-west-2.elb.amazonaws.com"
 
@@ -35,15 +41,18 @@ metadata:
   name: fastapi-backend-deployment
   labels:
     app: fastapi-backend
+    region: eu-west-2
 spec:
   replicas: 2 
   selector:
     matchLabels:
       app: fastapi-backend
+      region: eu-west-2
   template:
     metadata:
       labels:
         app: fastapi-backend
+        region: eu-west-2
     spec:
       serviceAccountName: aura-flow-backend-sa 
       containers:
@@ -85,9 +94,11 @@ metadata:
   name: fastapi-backend-service
   labels:
     app: fastapi-backend
+    region: eu-west-2
 spec:
   selector:
-    app: fastapi-backend 
+    app: fastapi-backend
+    region: eu-west-2
   ports:
     - protocol: TCP
       port: 8000         
@@ -114,6 +125,7 @@ metadata:
     alb.ingress.kubernetes.io/backend-protocol: HTTP
   labels:
     app: fastapi-backend
+    region: eu-west-2
 spec:
   ingressClassName: alb
   rules:
