@@ -117,7 +117,7 @@ resource "aws_db_instance" "read_replica" {
 resource "aws_secretsmanager_secret" "primary_db_credentials" {
   count = var.is_read_replica ? 0 : 1
 
-  name        = "${lower(var.environment_tag)}-${var.region}-database-credentials"
+  name        = "${lower(var.environment_tag)}-${var.region}-primary-db-credentials" # Add '-primary' to distinguish
   description = "Database credentials for primary RDS instance in ${var.region} ${var.environment_tag}"
 
   tags = {
@@ -125,8 +125,6 @@ resource "aws_secretsmanager_secret" "primary_db_credentials" {
     Region      = var.region
     DatabaseType = "primary"
   }
-
-  # Remove automatic replication - we'll create separate secrets
 }
 
 resource "aws_secretsmanager_secret_version" "primary_db_credentials_version" {
@@ -147,7 +145,7 @@ resource "aws_secretsmanager_secret_version" "primary_db_credentials_version" {
 resource "aws_secretsmanager_secret" "replica_db_credentials" {
   count = var.is_read_replica ? 1 : 0
 
-  name        = "${lower(var.environment_tag)}-${var.region}-db-credentials"
+  name        = "${lower(var.environment_tag)}-${var.region}-replica-db-credentials" # Add '-replica' to distinguish
   description = "Database credentials for read replica RDS instance in ${var.region} ${var.environment_tag}"
 
   tags = {
@@ -164,7 +162,7 @@ resource "aws_secretsmanager_secret_version" "replica_db_credentials_version" {
   secret_string = jsonencode({
     db_name  = var.db_name
     engine   = var.db_engine
-    host     = aws_db_instance.read_replica[0].address  # CORRECT: Points to replica endpoint
+    host     = aws_db_instance.read_replica[0].address  # Points to replica endpoint
     password = var.db_master_password
     port     = var.db_port
     username = var.db_master_username
