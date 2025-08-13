@@ -1,6 +1,6 @@
 # Update kubeconfig for both clusters
-aws eks update-kubeconfig --region us-east-1 --name your-primary-cluster-name
-aws eks update-kubeconfig --region us-west-2 --name aura-flow-dev-eu-west-2
+aws eks update-kubeconfig --region us-east-1 --name aura-flow-dev-us-east-1
+aws eks update-kubeconfig --region eu-west-2 --name aura-flow-dev-eu-west-2
 
 # Add the EKS charts repository
 helm repo add eks https://aws.github.io/eks-charts

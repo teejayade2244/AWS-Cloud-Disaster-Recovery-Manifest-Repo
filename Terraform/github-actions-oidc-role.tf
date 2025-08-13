@@ -76,7 +76,7 @@ resource "aws_iam_role_policy" "ecr_push_policy" {
             for name in var.application_names : "arn:aws:ecr:${var.primary_region}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-production-${var.primary_region}-${name}"
           ],
           [
-            for name in var.application_names : "arn:aws:ecr:${var.secondary_region}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-DisasterRecovery-${var.secondary_region}-${name}"
+            for name in var.application_names : "arn:aws:ecr:${var.secondary_region}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}-disasterrecovery-${var.secondary_region}-${name}"
           ]
         )
       },
