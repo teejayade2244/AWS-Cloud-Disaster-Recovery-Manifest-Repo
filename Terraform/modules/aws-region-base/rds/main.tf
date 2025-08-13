@@ -160,7 +160,7 @@ resource "aws_secretsmanager_secret_version" "replica_db_credentials_version" {
 
   secret_id = aws_secretsmanager_secret.replica_db_credentials[0].id
   secret_string = jsonencode({
-    db_name  = var.db_name
+    db_name  = "appdb_primary"  # Explicitly set the db_name to match the primary
     engine   = var.db_engine
     host     = aws_db_instance.read_replica[0].address  # Points to replica endpoint
     password = var.db_master_password
