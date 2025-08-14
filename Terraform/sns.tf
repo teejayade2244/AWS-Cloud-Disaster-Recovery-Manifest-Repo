@@ -1,7 +1,6 @@
 # --- SNS Topic for Health Check Notifications ---
 resource "aws_sns_topic" "health_check_notifications" {
-  provider = aws.secondary  
-  name     = "${var.project_name}-health-check-notifications"
+  name = var.sns_topic_name
 
   tags = {
     Name        = "${var.project_name}-health-check-notifications"
