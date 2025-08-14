@@ -64,18 +64,6 @@ resource "aws_cloudwatch_log_group" "route53_health_check_logs" {
   }
 }
 
-# --- SNS Topic for notifications (must be in us-east-1) ---
-resource "aws_sns_topic" "health_check_notifications" {
-  provider = aws.secondary  # Add this line
-  name     = "${var.project_name}-health-check-notifications"
-
-  tags = {
-    Name        = "${var.project_name}-health-check-notifications"
-    Environment = "Production"
-    Project     = var.project_name
-  }
-}
-
 # --- CloudWatch Alarms for Health Check Failures ---
 resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
   provider            = aws.secondary  # Add this line - MUST be in us-east-1
