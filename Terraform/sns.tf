@@ -1,3 +1,4 @@
+# --- SNS Topic for Health Check Notifications ---
 resource "aws_sns_topic" "health_check_notifications" {
   name = var.sns_topic_name
 
@@ -42,5 +43,5 @@ resource "aws_sns_topic_policy" "health_check_notifications_policy" {
   })
 }
 
-# --- Data source to get current AWS account ID ---
-data "aws_caller_identity" "current" {}
+# # --- Data source to get current AWS account ID ---
+# data "aws_caller_identity" "current" {}
