@@ -17,14 +17,13 @@ data "aws_lb" "secondary" {
 
 # --- Route 53 Health Check for Primary ALB (eu-west-2) ---
 resource "aws_route53_health_check" "primary_alb_health_check" {
-  fqdn                            = data.aws_lb.primary.dns_name
-  port                            = var.health_check_port
-  type                            = var.health_check_protocol
-  resource_path                   = var.health_check_path
-  failure_threshold               = 3
-  request_interval                = 30
-  measure_latency                 = true
-  insufficient_data_health_status = "LastKnownStatus"
+  fqdn              = data.aws_lb.primary.dns_name
+  port              = var.health_check_port
+  type              = var.health_check_protocol
+  resource_path     = var.health_check_path
+  failure_threshold = 3
+  request_interval  = 30
+  measure_latency   = true
 
   tags = {
     Name        = "${var.project_name}-primary-alb-health-check"
@@ -36,14 +35,13 @@ resource "aws_route53_health_check" "primary_alb_health_check" {
 
 # --- Route 53 Health Check for Secondary/DR ALB (us-east-1) ---
 resource "aws_route53_health_check" "secondary_alb_health_check" {
-  fqdn                            = data.aws_lb.secondary.dns_name
-  port                            = var.health_check_port
-  type                            = var.health_check_protocol
-  resource_path                   = var.health_check_path
-  failure_threshold               = 3
-  request_interval                = 30
-  measure_latency                 = true
-  insufficient_data_health_status = "LastKnownStatus"
+  fqdn              = data.aws_lb.secondary.dns_name
+  port              = var.health_check_port
+  type              = var.health_check_protocol
+  resource_path     = var.health_check_path
+  failure_threshold = 3
+  request_interval  = 30
+  measure_latency   = true
 
   tags = {
     Name        = "${var.project_name}-secondary-alb-health-check"
