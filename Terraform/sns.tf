@@ -1,13 +1,13 @@
 # --- SNS Topic for Health Check Notifications ---
-resource "aws_sns_topic" "health_check_notifications" {
-  name = var.sns_topic_name
+# resource "aws_sns_topic" "health_check_notifications" {
+#   name = var.sns_topic_name
 
-  tags = {
-    Name        = "${var.project_name}-health-check-notifications"
-    Environment = "Production"
-    Project     = var.project_name
-  }
-}
+#   tags = {
+#     Name        = "${var.project_name}-health-check-notifications"
+#     Environment = "Production"
+#     Project     = var.project_name
+#   }
+# }
 
 # --- SNS Topic Subscription ---
 resource "aws_sns_topic_subscription" "email_notification" {

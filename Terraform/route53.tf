@@ -52,10 +52,8 @@ resource "aws_route53_health_check" "secondary_alb_health_check" {
 }
 
 # --- CloudWatch Log Group for Route 53 Health Check Logs ---
-# --- CloudWatch Log Group for Route 53 Health Check Logs ---
-# Note: This should also be in us-east-1 for Route 53
 resource "aws_cloudwatch_log_group" "route53_health_check_logs" {
-  provider          = aws.secondary  # Add this line - must be in us-east-1
+  provider          = aws.secondary  #  - must be in us-east-1
   name              = "/aws/route53/healthchecks/${var.project_name}"
   retention_in_days = 14
 
