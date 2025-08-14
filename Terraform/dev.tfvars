@@ -49,7 +49,7 @@ project_name    = "aura-flow"
 application_names = ["backend-api", "frontend-app"]
 
 # GitHub Actions OIDC Role
-github_organization = "teejayade2244" # Replace with your GitHub organization name
+github_organization = "teejayade2244" 
 github_repository  = "Cloud-Disaster-Recovery-Demo-App-React-Frontend-and-Python-Backend" 
 
 domain_name        = "coreservetest.co.uk" 

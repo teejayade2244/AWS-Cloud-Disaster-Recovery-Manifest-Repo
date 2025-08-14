@@ -238,17 +238,6 @@ variable "app_subdomain_name" {
   type        = string
 }
 
-# These are the NEW variables for identifying your ALBs via data sources
-variable "primary_alb_name" {
-  description = "The name of the Application Load Balancer in the primary region (eu-west-2) to be looked up by data source."
-  type        = string
-}
-
-variable "secondary_alb_name" {
-  description = "The name of the Application Load Balancer in the secondary/DR region (us-east-1) to be looked up by data source."
-  type        = string
-}
-
 variable "health_check_port" {
   description = "Port for Route 53 health checks to your ALBs (e.g., 80 or 443)."
   type        = number
@@ -267,7 +256,6 @@ variable "health_check_path" {
   default     = "/"
 }
 
-# These are the NEW variables for SNS topic creation
 variable "sns_topic_name" {
   description = "The name for the SNS topic that will receive CloudWatch alarm notifications."
   type        = string
@@ -277,12 +265,6 @@ variable "sns_topic_name" {
 variable "notification_email" {
   description = "The email address to subscribe to the SNS topic for notifications. IMPORTANT: You MUST confirm the subscription via email after apply."
   type        = string
-}
-
-variable "create_www_cname" {
-  description = "Set to true to create a 'www' CNAME record that points to your app subdomain (e.g., www.app.yourdomain.com -> app.yourdomain.com)."
-  type        = bool
-  default     = false
 }
 
 variable "create_www_cname" {
