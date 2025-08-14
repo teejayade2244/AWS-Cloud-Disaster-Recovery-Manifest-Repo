@@ -50,5 +50,20 @@ application_names = ["backend-api", "frontend-app"]
 
 # GitHub Actions OIDC Role
 github_organization = "teejayade2244" # Replace with your GitHub organization name
-github_repository  = "Cloud-Disaster-Recovery-Demo-App-React-Frontend-and-Python-Backend" # Replace with your GitHub repository name
+github_repository  = "Cloud-Disaster-Recovery-Demo-App-React-Frontend-and-Python-Backend" 
+
+domain_name        = "coreservetest.co.uk" 
+app_subdomain_name = "app"          
+
+# --- Health Check Configuration ---
+health_check_port     = 80      
+health_check_protocol = "HTTP"  
+health_check_path     = "/"     
+
+# --- SNS Notification Topic Details ---
+sns_topic_name     = "aura-flow-health-alerts"          
+notification_email = "T.a.adebunmi@wlv.ac.uk"   
+
+# --- Optional: www CNAME ---
+create_www_cname = false
 

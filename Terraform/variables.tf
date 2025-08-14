@@ -226,3 +226,69 @@ variable "github_repository" {
   description = "GitHub repository name"
   type        = string
 }
+
+
+variable "domain_name" {
+  description = "The main domain name for your Route 53 Hosted Zone (e.g., example.com). You MUST own this domain."
+  type        = string
+}
+
+variable "app_subdomain_name" {
+  description = "The subdomain for your application (e.g., 'app' for app.yourdomain.com). This will be part of the URL users access."
+  type        = string
+}
+
+variable "primary_alb_dns_name" {
+  description = "The DNS name of the Application Load Balancer in the primary region (eu-west-2)."
+  type        = string
+}
+
+variable "primary_alb_hosted_zone_id" {
+  description = "The Hosted Zone ID of the Application Load Balancer in the primary region (eu-west-2)."
+  type        = string
+}
+
+variable "secondary_alb_dns_name" {
+  description = "The DNS name of the Application Load Balancer in the secondary/DR region (us-east-1)."
+  type        = string
+}
+
+variable "secondary_alb_hosted_zone_id" {
+  description = "The Hosted Zone ID of the Application Load Balancer in the secondary/DR region (us-east-1)."
+  type        = string
+}
+
+variable "health_check_port" {
+  description = "Port for Route 53 health checks to your ALBs (e.g., 80 or 443)."
+  type        = number
+  default     = 80
+}
+
+variable "health_check_protocol" {
+  description = "Protocol for Route 53 health checks (e.g., 'HTTP' or 'HTTPS')."
+  type        = string
+  default     = "HTTP"
+}
+
+variable "health_check_path" {
+  description = "Path for Route 53 health check endpoint on your ALBs (e.g., '/health' or '/')."
+  type        = string
+  default     = "/"
+}
+
+variable "sns_topic_name" {
+  description = "The name for the SNS topic that will receive CloudWatch alarm notifications."
+  type        = string
+  default     = "health-check-notifications" # A sensible default
+}
+
+variable "notification_email" {
+  description = "The email address to subscribe to the SNS topic for notifications. IMPORTANT: You MUST confirm the subscription via email after apply."
+  type        = string
+}
+
+variable "create_www_cname" {
+  description = "Set to true to create a 'www' CNAME record that points to your app subdomain (e.g., www.app.yourdomain.com -> app.yourdomain.com)."
+  type        = bool
+  default     = false
+}
