@@ -1,30 +1,31 @@
-# --- SNS Topic for Health Check Notifications ---
 resource "aws_sns_topic" "health_check_notifications" {
-  name = var.sns_topic_name
+  provider = aws.secondary  # MUST be in us-east-1 to receive CloudWatch alarms
+  name     = "${var.project_name}-route53-health-notifications"
 
   tags = {
-    Name        = "${var.project_name}-health-check-notifications"
+    Name        = "${var.project_name}-health-notifications"
     Environment = "Production"
     Project     = var.project_name
   }
 }
 
-# --- SNS Topic Subscription ---
-resource "aws_sns_topic_subscription" "email_notification" {
+# --- SNS Topic Subscription for Email Notifications ---
+resource "aws_sns_topic_subscription" "health_check_email" {
+  provider  = aws.secondary  # MUST be in us-east-1
   topic_arn = aws_sns_topic.health_check_notifications.arn
   protocol  = "email"
-  endpoint  = var.notification_email
+  endpoint  = var.notification_email  
 }
 
-# --- SNS Topic Policy (allows CloudWatch to publish) ---
+#  SNS Topic Policy to allow CloudWatch to publish ---
 resource "aws_sns_topic_policy" "health_check_notifications_policy" {
-  arn = aws_sns_topic.health_check_notifications.arn
+  provider = aws.secondary
+  arn      = aws_sns_topic.health_check_notifications.arn
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowCloudWatchToPublish"
         Effect = "Allow"
         Principal = {
           Service = "cloudwatch.amazonaws.com"
@@ -43,5 +44,7 @@ resource "aws_sns_topic_policy" "health_check_notifications_policy" {
   })
 }
 
-# # --- Data source to get current AWS account ID ---
-# data "aws_caller_identity" "current" {}
+# Data source to get current AWS account ID
+# data "aws_caller_identity" "current" {
+#   provider = aws.secondary
+# }

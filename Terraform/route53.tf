@@ -6,6 +6,7 @@ data "aws_route53_zone" "primary_hosted_zone" {
 
 # --- Data Source for Primary ALB (eu-west-2) ---
 data "aws_lb" "primary" {
+  provider = aws.primary
   name = "k8s-auraflow-reactfro-6cd6adc8a3"
 }
 
@@ -51,6 +52,7 @@ resource "aws_route53_health_check" "secondary_alb_health_check" {
   }
 }
 
+
 # --- CloudWatch Log Group for Route 53 Health Check Logs ---
 resource "aws_cloudwatch_log_group" "route53_health_check_logs" {
   provider          = aws.secondary  # MUST be in us-east-1
@@ -65,8 +67,10 @@ resource "aws_cloudwatch_log_group" "route53_health_check_logs" {
 }
 
 # --- CloudWatch Alarms for Health Check Failures ---
+# Both alarms MUST use the secondary provider (us-east-1) because Route 53 metrics
+# are only available in us-east-1 regardless of where the monitored resources are located
 resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
-  provider            = aws.secondary  # Ensure this uses the us-east-1 region
+  provider            = aws.secondary  # MUST be us-east-1 for Route 53 metrics
   alarm_name          = "${var.project_name}-primary-health-check-failure"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -75,7 +79,7 @@ resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
   period              = "60"
   statistic           = "Minimum"
   threshold           = "1"
-  alarm_description   = "This alarm monitors the health status of the primary ALB. Triggers on failure."
+  alarm_description   = "This alarm monitors the health status of the primary ALB (eu-west-2). Triggers on failure."
   alarm_actions       = [aws_sns_topic.health_check_notifications.arn]
   treat_missing_data  = "breaching"
 
@@ -87,11 +91,12 @@ resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
     Name        = "${var.project_name}-primary-health-alarm"
     Environment = "Production"
     Project     = var.project_name
+    MonitoredRegion = var.primary_region  # Tag to indicate which region is being monitored
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "secondary_health_check_alarm" {
-  provider            = aws.secondary  # Ensure this uses the us-east-1 region
+  provider            = aws.secondary  # MUST be us-east-1 for Route 53 metrics
   alarm_name          = "${var.project_name}-secondary-health-check-failure"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -100,7 +105,7 @@ resource "aws_cloudwatch_metric_alarm" "secondary_health_check_alarm" {
   period              = "60"
   statistic           = "Minimum"
   threshold           = "1"
-  alarm_description   = "This alarm monitors the health status of the secondary/DR ALB. Triggers on failure."
+  alarm_description   = "This alarm monitors the health status of the secondary/DR ALB (us-east-1). Triggers on failure."
   alarm_actions       = [aws_sns_topic.health_check_notifications.arn]
   treat_missing_data  = "breaching"
 
@@ -112,5 +117,48 @@ resource "aws_cloudwatch_metric_alarm" "secondary_health_check_alarm" {
     Name        = "${var.project_name}-secondary-health-alarm"
     Environment = "DisasterRecovery"
     Project     = var.project_name
+    MonitoredRegion = var.secondary_region  # Tag to indicate which region is being monitored
   }
+}
+
+# Primary DNS record (active)
+resource "aws_route53_record" "primary" {
+  zone_id = data.aws_route53_zone.primary_hosted_zone.zone_id
+  name    = var.domain_name
+  type    = "A"
+  
+  alias {
+    name                   = data.aws_lb.primary.dns_name
+    zone_id                = data.aws_lb.primary.zone_id
+    evaluate_target_health = true
+  }
+  
+  set_identifier = "primary"
+  
+  failover_routing_policy {
+    type = "PRIMARY"
+  }
+  
+  health_check_id = aws_route53_health_check.primary_alb_health_check.id
+}
+
+# Secondary DNS record (standby)
+resource "aws_route53_record" "secondary" {
+  zone_id = data.aws_route53_zone.primary_hosted_zone.zone_id
+  name    = var.domain_name
+  type    = "A"
+  
+  alias {
+    name                   = data.aws_lb.secondary.dns_name
+    zone_id                = data.aws_lb.secondary.zone_id
+    evaluate_target_health = true
+  }
+  
+  set_identifier = "secondary"
+  
+  failover_routing_policy {
+    type = "SECONDARY"
+  }
+  
+  health_check_id = aws_route53_health_check.secondary_alb_health_check.id
 }
