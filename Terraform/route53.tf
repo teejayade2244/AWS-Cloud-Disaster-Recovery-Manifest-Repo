@@ -117,7 +117,7 @@ resource "aws_cloudwatch_metric_alarm" "secondary_health_check_alarm" {
     Name        = "${var.project_name}-secondary-health-alarm"
     Environment = "DisasterRecovery"
     Project     = var.project_name
-    MonitoredRegion = var.secondary_region  # Tag to indicate which region is being monitored
+    MonitoredRegion = var.secondary_region  
   }
 }
 
@@ -162,3 +162,14 @@ resource "aws_route53_record" "secondary" {
   
   health_check_id = aws_route53_health_check.secondary_alb_health_check.id
 }
+
+resource "aws_route53_record" "app_cname" {
+  zone_id = data.aws_route53_zone.primary_hosted_zone.zone_id
+  name    = "app"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["coreservetest.co.uk"]
+}
+
+# CloudWatch alarms for Route 53 health checks must be created in the us-east-1 region, 
+# regardless of where your health checks or resources are located.
