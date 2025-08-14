@@ -66,7 +66,7 @@ resource "aws_cloudwatch_log_group" "route53_health_check_logs" {
 
 # --- CloudWatch Alarms for Health Check Failures ---
 resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
-  provider            = aws.secondary  # MUST be in us-east-1
+  provider            = aws.secondary  # Ensure this uses the us-east-1 region
   alarm_name          = "${var.project_name}-primary-health-check-failure"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -91,7 +91,7 @@ resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "secondary_health_check_alarm" {
-  provider            = aws.secondary # MUST be in us-east-1
+  provider            = aws.secondary  # Ensure this uses the us-east-1 region
   alarm_name          = "${var.project_name}-secondary-health-check-failure"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
