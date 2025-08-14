@@ -24,7 +24,7 @@ resource "aws_route53_health_check" "primary_alb_health_check" {
   failure_threshold               = 3
   request_interval                = 30
   measure_latency                 = true
-  insufficient_data_health_status = "Healthy"
+  insufficient_data_health_status = "LastKnownStatus"
 
   tags = {
     Name        = "${var.project_name}-primary-alb-health-check"
