@@ -52,7 +52,10 @@ resource "aws_route53_health_check" "secondary_alb_health_check" {
 }
 
 # --- CloudWatch Log Group for Route 53 Health Check Logs ---
+# --- CloudWatch Log Group for Route 53 Health Check Logs ---
+# Note: This should also be in us-east-1 for Route 53
 resource "aws_cloudwatch_log_group" "route53_health_check_logs" {
+  provider          = aws.secondary  # Add this line - must be in us-east-1
   name              = "/aws/route53/healthchecks/${var.project_name}"
   retention_in_days = 14
 
@@ -63,8 +66,21 @@ resource "aws_cloudwatch_log_group" "route53_health_check_logs" {
   }
 }
 
+# --- SNS Topic for notifications (must be in us-east-1) ---
+resource "aws_sns_topic" "health_check_notifications" {
+  provider = aws.secondary  # Add this line
+  name     = "${var.project_name}-health-check-notifications"
+
+  tags = {
+    Name        = "${var.project_name}-health-check-notifications"
+    Environment = "Production"
+    Project     = var.project_name
+  }
+}
+
 # --- CloudWatch Alarms for Health Check Failures ---
 resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
+  provider            = aws.secondary  # Add this line - MUST be in us-east-1
   alarm_name          = "${var.project_name}-primary-health-check-failure"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -89,6 +105,7 @@ resource "aws_cloudwatch_metric_alarm" "primary_health_check_alarm" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "secondary_health_check_alarm" {
+  provider            = aws.secondary  # Add this line - MUST be in us-east-1
   alarm_name          = "${var.project_name}-secondary-health-check-failure"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -111,52 +128,3 @@ resource "aws_cloudwatch_metric_alarm" "secondary_health_check_alarm" {
     Project     = var.project_name
   }
 }
-
-# --- Route 53 Record Set: Primary (eu-west-2) ---
-resource "aws_route53_record" "app_primary_record" {
-  zone_id = data.aws_route53_zone.primary_hosted_zone.zone_id
-  name    = var.app_subdomain_name
-  type    = "A"
-
-  alias {
-    name                   = data.aws_lb.primary.dns_name
-    zone_id                = data.aws_lb.primary.zone_id
-    evaluate_target_health = true
-  }
-
-  failover_routing_policy {
-    type = "PRIMARY"
-  }
-  health_check_id = aws_route53_health_check.primary_alb_health_check.id
-  set_identifier  = "primary"
-}
-
-# --- Route 53 Record Set: Secondary (us-east-1) ---
-resource "aws_route53_record" "app_secondary_record" {
-  zone_id = data.aws_route53_zone.primary_hosted_zone.zone_id
-  name    = var.app_subdomain_name
-  type    = "A"
-
-  alias {
-    name                   = data.aws_lb.secondary.dns_name
-    zone_id                = data.aws_lb.secondary.zone_id
-    evaluate_target_health = true
-  }
-
-  failover_routing_policy {
-    type = "SECONDARY"
-  }
-  health_check_id = aws_route53_health_check.secondary_alb_health_check.id
-  set_identifier  = "secondary"
-}
-
-# --- Optional: CNAME for www subdomain ---
-resource "aws_route53_record" "www_cname" {
-  count   = var.create_www_cname ? 1 : 0
-  zone_id = data.aws_route53_zone.primary_hosted_zone.zone_id
-  name    = "www.${var.app_subdomain_name}"
-  type    = "CNAME"
-  ttl     = 300
-  records = ["${var.app_subdomain_name}.${var.domain_name}"]
-}
-
