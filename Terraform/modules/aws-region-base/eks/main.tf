@@ -147,6 +147,14 @@ resource "aws_eks_cluster" "main" {
     security_group_ids = [aws_security_group.eks_cluster_sg.id]
   }
 
+  lifecycle {
+    ignore_changes = [
+      vpc_config.endpoint_private_access,
+      vpc_config.endpoint_public_access,
+      vpc_config.public_access_cidrs
+    ]
+  }
+
   # Ensure that the EKS cluster is created before the node group
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy_attach,
