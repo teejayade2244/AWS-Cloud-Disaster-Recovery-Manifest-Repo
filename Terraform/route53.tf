@@ -159,3 +159,4 @@ resource "aws_route53_record" "www_cname" {
   ttl     = 300
   records = ["${var.app_subdomain_name}.${var.domain_name}"]
 }
+
