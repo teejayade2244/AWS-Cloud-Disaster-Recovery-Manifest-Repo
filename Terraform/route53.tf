@@ -1,4 +1,4 @@
-data "aws_caller_identity" "current" {}
+# data "aws_caller_identity" "current" {}
 
 # --- Route 53 Hosted Zone ---
 data "aws_route53_zone" "primary_hosted_zone" {
