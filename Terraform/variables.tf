@@ -272,3 +272,32 @@ variable "create_www_cname" {
   type        = bool
   default     = false
 }
+
+# variables.tf updated for DB Failover Lambda
+
+variable "secondary_aws_region" {
+  description = "The AWS region where the DR Lambda and replica DB reside (e.g., us-east-1)."
+  type        = string
+  default     = "us-east-1" # Assuming us-east-1 is your DR region
+}
+
+variable "primary_health_alarm_name" {
+  description = "The name of the CloudWatch alarm monitoring the primary region's health (used by Lambda to filter events)."
+  type        = string
+  default     = "aura-flow-primary-health-check-failure" # Matches your existing alarm name
+}
+
+variable "dr_db_replica_id" {
+  description = "The DB instance identifier of the read replica in the DR region (us-east-1) to be promoted."
+  type        = string
+}
+
+variable "dr_db_credentials_secret_name" {
+  description = "The name of the Secrets Manager secret in the DR region holding the DR database credentials."
+  type        = string
+}
+
+variable "notification_topic_arn" {
+  description = "The ARN of the SNS topic for sending success/failure notifications about the failover process."
+  type        = string
+}

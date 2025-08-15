@@ -67,3 +67,7 @@ notification_email = "T.a.adebunmi@wlv.ac.uk"
 # --- Optional: www CNAME ---
 create_www_cname = false
 
+# --- DR Database and Secret Details (for Lambda) ---
+dr_db_replica_id               = "db-5IGUXPWA2R4CXAV6J7MSG2K4GY" 
+dr_db_credentials_secret_name  = "disasterrecovery-us-east-1-replica-db-credentials"  
+notification_topic_arn         = "arn:aws:sns:us-east-1:899411341244:aura-flow-route53-health-notifications" 
