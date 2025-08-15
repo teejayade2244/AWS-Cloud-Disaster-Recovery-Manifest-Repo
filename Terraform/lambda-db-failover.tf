@@ -1,8 +1,3 @@
-# lambda-db-failover.tf
-
-# Data source for current AWS account
-# data "aws_caller_identity" "current" {}
-
 # --- IAM Role for Lambda Function ---
 resource "aws_iam_role" "db_failover_lambda_role" {
   provider = aws.secondary  # Lambda is deployed in DR region
