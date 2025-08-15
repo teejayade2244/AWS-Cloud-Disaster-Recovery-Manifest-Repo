@@ -106,15 +106,14 @@ resource "aws_lambda_function" "db_failover_lambda" {
 
   filename         = data.archive_file.lambda_zip.output_path
   function_name    = "${var.project_name}-db-failover-lambda"
-  role            = aws_iam_role.db_failover_lambda_role.arn
-  handler         = "lambda_function.lambda_handler"
-  runtime         = "python3.11"  # Updated to latest version
-  timeout         = 900           # 15 minutes for long-running promotions
-  memory_size     = 512           # Increased memory
+  role             = aws_iam_role.db_failover_lambda_role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = "python3.11"  # Updated to latest version
+  timeout          = 900           # 15 minutes for long-running promotions
+  memory_size      = 512           # Increased memory
 
   environment {
     variables = {
-      AWS_REGION                     = var.secondary_region  # Fixed: use secondary_region
       PRIMARY_HEALTH_ALARM_NAME      = var.primary_health_alarm_name
       DR_DB_REPLICA_ID               = var.dr_db_replica_id
       DR_DB_CREDENTIALS_SECRET_NAME  = var.dr_db_credentials_secret_name
