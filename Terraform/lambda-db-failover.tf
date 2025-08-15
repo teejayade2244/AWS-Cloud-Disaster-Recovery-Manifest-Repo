@@ -124,12 +124,9 @@ resource "aws_lambda_function" "db_failover_lambda" {
 
   # Remove the provisioner from here as it's now in null_resource
   # provisioner "local-exec" { ... }
-
   lifecycle {
     create_before_destroy = true
     ignore_changes = [
-      # filename, # No need to ignore if it's managed by null_resource
-      # source_code_hash, # No need to ignore if triggers are set on null_resource
     ]
   }
 
