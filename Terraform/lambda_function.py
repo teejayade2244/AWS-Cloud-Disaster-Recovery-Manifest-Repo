@@ -97,8 +97,7 @@ def promote_read_replica(db_instance_id: str) -> Dict[str, Any]:
         promote_response = rds_client.promote_read_replica(
             DBInstanceIdentifier=db_instance_id,
             BackupRetentionPeriod=7,
-            PreferredBackupWindow='03:00-04:00',
-            PreferredMaintenanceWindow='sun:04:00-sun:05:00'
+            PreferredBackupWindow='03:00-04:00'
         )
         
         logger.info(f"Promotion initiated for {db_instance_id}")
