@@ -76,40 +76,60 @@ resource "aws_iam_role_policy_attachment" "db_failover_lambda_attach" {
 }
 
 # --- Lambda Function for DB Failover ---
+resource "null_resource" "lambda_zipper" {
+  # Trigger recreation of the zip file if the Python code changes
+  triggers = {
+    python_code_hash = filebase64sha256("${path.module}/lambda_function.py")
+  }
+
+  provisioner "local-exec" {
+    command = "zip -j ${path.module}/lambda_function.zip ${path.module}/lambda_function.py"
+    working_dir = path.module # Ensure command runs from module root
+  }
+
+  # Clean up the zip file on destruction (optional, but good practice)
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -f ${path.module}/lambda_function.zip"
+    working_dir = path.module
+  }
+}
+
+# --- Lambda Function for DB Failover ---
 resource "aws_lambda_function" "db_failover_lambda" {
-  filename      = "lambda_function.zip"
+  # Add an explicit dependency on the null_resource
+  # This ensures the zip file is created BEFORE Lambda attempts to read it.
+  depends_on = [null_resource.lambda_zipper]
+
+  filename      = "${path.module}/lambda_function.zip" # Use full path now
   function_name = "${var.project_name}-db-failover-lambda"
   role          = aws_iam_role.db_failover_lambda_role.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
-  timeout       = 300 
-  memory_size   = 256 
+  timeout       = 300
+  memory_size   = 256
 
-  # Environment variables for the Lambda function
   environment {
     variables = {
-      AWS_REGION                     = var.secondary_aws_region 
+      AWS_REGION                     = var.secondary_aws_region
       PRIMARY_HEALTH_ALARM_NAME      = var.primary_health_alarm_name
       DR_DB_REPLICA_ID               = var.dr_db_replica_id
       DR_DB_CREDENTIALS_SECRET_NAME  = var.dr_db_credentials_secret_name
-      NOTIFICATION_TOPIC_ARN         = var.notification_topic_arn # New!
+      NOTIFICATION_TOPIC_ARN         = var.notification_topic_arn
     }
   }
 
-  source_code_hash = filebase64sha256("lambda_function.zip")
+  # Refer to the zip file created by the null_resource
+  source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
 
-  # Create the ZIP file containing the Lambda code
-  provisioner "local-exec" {
-    command = <<EOT
-      zip -j lambda_function.zip "${path.module}/lambda_function.py"
-    EOT
-  }
+  # Remove the provisioner from here as it's now in null_resource
+  # provisioner "local-exec" { ... }
 
   lifecycle {
     create_before_destroy = true
     ignore_changes = [
-      filename,         
-      source_code_hash, 
+      # filename, # No need to ignore if it's managed by null_resource
+      # source_code_hash, # No need to ignore if triggers are set on null_resource
     ]
   }
 
