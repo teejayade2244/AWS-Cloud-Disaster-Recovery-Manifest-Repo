@@ -43,7 +43,7 @@ The solution includes:
 
 ## Architecture
 
-![Architecture Diagram](<img width="6955" height="4091" alt="Blank diagram" src="https://github.com/user-attachments/assets/aa00a08a-1411-49c6-85f3-e31f9bd34a56" />)
+<img width="6955" height="4091" alt="Blank diagram" src="https://github.com/user-attachments/assets/aa00a08a-1411-49c6-85f3-e31f9bd34a56" />
 
 ### Key Components:
 1. **Primary Region**:
