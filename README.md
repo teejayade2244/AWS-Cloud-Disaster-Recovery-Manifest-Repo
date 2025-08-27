@@ -85,5 +85,129 @@ The solution includes:
 6. **dig**: For DNS resolution checks.
 
 ---
+## Setup Instructions
 
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/teejayade2244/AWS-Cloud-Disaster-Recovery-Manifest-Repo.git
+cd AWS-Cloud-Disaster-Recovery-Manifest-Repo
+```
+
+### 2. Configure AWS Credentials
+
+Make sure your AWS CLI is configured:
+
+```bash
+aws configure
+```
+
+### 3. Initialize Terraform
+
+Navigate to the terraform directory and initialize:
+
+```bash
+cd terraform
+terraform init
+```
+
+### 4. Deploy the Infrastructure
+
+Apply the Terraform scripts to provision AWS resources:
+
+```bash
+terraform apply
+```
+
+> **Note**: Review and update variable values in `terraform/variables.tf` as needed.
+
+### 5. Deploy Kubernetes Resources
+
+After the infrastructure is ready, deploy your workloads:
+
+```bash
+# Configure kubectl for each EKS cluster (Primary & Secondary)
+aws eks --region eu-west-2 update-kubeconfig --name <primary-eks-cluster>
+aws eks --region us-east-1 update-kubeconfig --name <dr-eks-cluster>
+
+# Apply Kubernetes manifests
+kubectl apply -f kubernetes/manifests/
+# Or deploy with Helm
+helm install <release-name> kubernetes/helm/
+```
+
+---
+
+## Failover Process
+
+1. **Detection**: Route 53 health checks monitor ALB endpoints in both regions.
+2. **Trigger**: If the primary region is unhealthy, Route 53 automatically switches DNS to the secondary region.
+3. **Database Promotion**: AWS Lambda promotes the RDS read replica to a standalone primary.
+4. **Secrets Update**: Lambda updates AWS Secrets Manager with the new database endpoint.
+5. **Application Update**: Kubernetes applications in the DR region continue serving traffic with the promoted database.
+
+---
+
+## Scripts
+
+- **failover.sh**: Manual trigger for failover testing.
+- **healthcheck.sh**: Checks health status of endpoints.
+- **cleanup.sh**: Removes deployed resources and cleans up AWS accounts.
+
+> Scripts are located in the `scripts/` directory and may require executable permissions (`chmod +x <script>`).
+
+---
+
+## Monitoring and Alerts
+
+- **Route 53 Health Checks**: Monitors ALB endpoints.
+- **SNS Notifications**: Sends alerts on failover events.
+- **CloudWatch Alarms**: Monitor AWS resource health and usage.
+
+---
+
+## Cleanup
+
+To remove all deployed resources:
+
+```bash
+cd terraform
+terraform destroy
+```
+
+Clean up Kubernetes resources:
+
+```bash
+kubectl delete -f kubernetes/manifests/
+helm uninstall <release-name>
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please submit issues and pull requests for improvements or bug fixes.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes.
+4. Submit a pull request.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## References
+
+- [AWS Disaster Recovery Documentation](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/welcome.html)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Kubernetes EKS Setup](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html)
+
+---
+
+*For questions or support, please open an issue in this repository.*
 
